@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/:room', (req, res) => {
-    res.render('hello.html', { roomId: req.params.room })
+    res.render('room', { roomId: req.params.room })
 })
 
 io.on('connection', socket => {
@@ -28,4 +28,4 @@ io.on('connection', socket => {
     })
 })
 
-server.listen(80)
+server.listen(8000)
