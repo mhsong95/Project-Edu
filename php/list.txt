@@ -1,3 +1,0 @@
-<li class="nav-item"><a class="nav-link active" href="./index.php?id=1">선형대수학</a></li>
-<li class="nav-item"><a class="nav-link active" href="./index.php?id=2">미적분</a></li>
-<li class="nav-item"><a class="nav-link active" href="./index.php?id=3">수열</a></li>

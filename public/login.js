@@ -4,7 +4,7 @@ function loginfunc(){
     firebase.auth().signInWithEmailAndPassword(useremail, userpassword)
         .then((user) => {
             window.alert("congrat!");
-            window.location = "./pages/main.html";
+            window.location = "main.html";
         })
         .catch((error) => {
             var errorCode = error.code;
