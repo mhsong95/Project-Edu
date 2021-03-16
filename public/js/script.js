@@ -5,9 +5,14 @@ const myPeer = new Peer(undefined, {
     port: '8080'
 })
 
-myPeer.on('open', id =>{
-    socket.emit('join-room', ROOM_ID, id)
-})
+// The value of this promise is used to broadcast that you've joined the room.
+// Broadcasting occurs when getUserMedia completes, thus all event listeners
+// (e.g. myPeer.on('call')) have had set.
+const myUserIdPromise = new Promise((resolve) => {
+    myPeer.on('open', id => {
+        resolve(id);    // My user ID
+    });
+});
 
 const myVideo = document.createElement('video')
 myVideo.muted = true
@@ -29,10 +34,15 @@ navigator.mediaDevices.getUserMedia({
     })
 
     socket.on('user-connected', userId => {
-        sleep(2000)
+        //sleep(2000)
         console.log('User connected: ' + userId)
         connectToNewUser(userId, stream)
     })
+
+    myUserIdPromise.then(id => {
+        socket.emit('join-room', ROOM_ID, id);
+    });
+
 })
 
 socket.on('user-disconnected', userId => {
@@ -51,6 +61,7 @@ function addVideoStream(video, stream) {
 function connectToNewUser(userId, stream) {
     const call = myPeer.call(userId, stream)
     const video = document.createElement('video')
+
     call.on('stream', userVideoStream => {
         addVideoStream(video, userVideoStream)
     })
@@ -60,8 +71,3 @@ function connectToNewUser(userId, stream) {
 
     peers[userId] = call
 }
-
-function sleep(ms) {
-    const wakeUpTime = Date.now() + ms
-    while (Date.now() < wakeUpTime) {}
-  }
