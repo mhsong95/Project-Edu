@@ -1,0 +1,90 @@
+body {
+    background: #fff;
+    padding: 0px;
+    margin: 0px;
+    font-family: "Roboto", sans-serif;
+    font-size: 16px;
+  }
+  
+  input,
+  button {
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+  }
+  
+  .login-proc {
+    width: 25%;
+    margin: auto;
+    margin-top: 5%;
+    padding: 20px;
+  }
+  
+  .login-proc input {
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    padding: 15px;
+    outline: none;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .login-proc button {
+    background: #5d8ffc;
+    color: #fff;
+    border: 0px;
+    border-radius: 5px;
+    padding: 15px;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .sign-up-proc {
+    width: 25%;
+    margin: auto;
+    margin-top: 5%;
+    padding: 20px;
+  }
+  
+  .sign-up-proc input {
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    padding: 15px;
+    outline: none;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .sign-up-proc button {
+    background: #5d8ffc;
+    color: #fff;
+    border: 0px;
+    border-radius: 5px;
+    padding: 15px;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .main-proc {
+    width: 25%;
+    margin: auto;
+    margin-top: 5%;
+    padding: 20px;
+  }
+  
+  .main-proc button {
+    background: #5d8ffc;
+    color: #fff;
+    border: 0px;
+    border-radius: 5px;
+    padding: 15px;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
+  

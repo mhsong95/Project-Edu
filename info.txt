@@ -1,0 +1,2 @@
+npm run devStart
+peerjs --port 8080
