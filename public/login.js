@@ -37,3 +37,29 @@ function signupfunc(){
             window.alert(errorCode + errorMessage);
         });
 }
+
+function create_class(){
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          var uid = user.uid;
+          console.log(uid);
+          window.location.href = `/create?user=${uid}`;
+        } else {
+          console.log("fail")
+        }
+      });
+}
+
+function join_class(){
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          var uid = user.uid;
+          console.log(uid);
+          roomID = document.getElementById("roomid").value;
+          console.log(roomID);
+          window.location.href = '/join?id=' + roomID + '&user=' + uid;
+        } else {
+          console.log("fail")
+        }
+      });
+}

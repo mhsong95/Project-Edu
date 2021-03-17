@@ -87,4 +87,33 @@ body {
     width: 100%;
     margin-top: 10px;
   }
+
+  .join-proc {
+    width: 25%;
+    margin: auto;
+    margin-top: 5%;
+    padding: 20px;
+  }
+
+  .join-proc input {
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    padding: 15px;
+    outline: none;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .join-proc button {
+    background: #5d8ffc;
+    color: #fff;
+    border: 0px;
+    border-radius: 5px;
+    padding: 15px;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
   
