@@ -1,7 +1,13 @@
 const express = require('express')
 const app = express()
+
+/* VSCode intellisense does not work
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
+*/
+const server = require('http').createServer(app);
+const io = new (require('socket.io').Server)(server);
+
 const { v4: uuidV4 } = require('uuid')
 var url = require('url')
 
