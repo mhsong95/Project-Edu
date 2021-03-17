@@ -19,6 +19,8 @@ myVideo.muted = true
 
 const peers = {}
 
+var isCreator = false;  // Indicates whether you have created a room, or just joined
+
 navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true
@@ -34,10 +36,17 @@ navigator.mediaDevices.getUserMedia({
     })
 
     socket.on('user-connected', userId => {
-        //sleep(2000)
         console.log('User connected: ' + userId)
-        connectToNewUser(userId, stream)
-    })
+
+        // Connect to the user only if you are a room creator.
+        if (isCreator) {
+            connectToNewUser(userId, stream)
+        }
+    });
+
+    socket.on('room-created', () => {
+        isCreator = true;
+    });
 
     myUserIdPromise.then(id => {
         socket.emit('join-room', ROOM_ID, id);

@@ -29,9 +29,16 @@ app.get('/:room', (req, res) => {
 
 io.on('connection', socket => {
     socket.on('join-room', (roomId, userId) => {
+        // If the room roomId does not exist, the user is the creator of the room.
+        // You can signal him/her that you are a creator.
+        if (!io.sockets.adapter.rooms.has(roomId)) {
+            socket.join(roomId);
+            socket.emit('room-created');
+        } else {
+            socket.join(roomId);
+            socket.broadcast.to(roomId).emit('user-connected', userId);
+        }
         console.log(roomId, userId)
-        socket.join(roomId)
-        socket.broadcast.to(roomId).emit('user-connected', userId)
 
         socket.on('disconnect', () => {
             socket.broadcast.to(roomId).emit('user-disconnected', userId)
