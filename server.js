@@ -14,14 +14,19 @@ app.get('/', (req, res) => {
 })
 
 app.get('/create', (req, res) => {
-    res.redirect(`/${uuidV4()}`)
-    //res.redirect('/room')
+    var _url = url.parse(req.url, true).query
+    user = _url.user
+    res.redirect('/room?user=' + user)
 })
 
-//app.get('/room', (req, res) => {
-app.get('/:room', (req, res) => {
-    res.render('room', { roomId: req.params.room })
-    //res.render('room', { roomId: uuidV4() })
+app.get('/join', (req, res) => {
+    var _url = url.parse(req.url, true).query
+    user = _url.user
+    res.render('room', { roomId: _url.id, User: user, ifcreate: false })
+})
+
+app.get('/room', (req, res) => {
+    res.render('room', { roomId: uuidV4(), User: user, ifcreate: true })
 })
 
 io.on('connection', socket => {

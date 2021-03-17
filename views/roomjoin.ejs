@@ -6,11 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         const ROOM_ID = '<%= roomId %>'
-        var Ifcreate = '<%= ifcreate %>'
-        Ifcreate = Boolean(Ifcreate)
-        if(Ifcreate){
-            window.alert('roomId: ' + ROOM_ID);
-        }
     </script>
     <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js" defer></script>
     <script src="/socket.io/socket.io.js" defer></script>
