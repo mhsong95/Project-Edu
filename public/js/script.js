@@ -32,7 +32,8 @@ navigator.mediaDevices.getUserMedia({
         const video = document.createElement('video')
         call.on('stream', userVideoStream => {
             addVideoStream(video, userVideoStream)
-        })
+            peers[call.peer] = call;    // The callee gets the ID of the caller
+        });
     })
 
     socket.on('user-connected', userId => {
