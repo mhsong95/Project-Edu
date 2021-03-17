@@ -1,5 +1,5 @@
-const express = require('express')
-const app = express()
+const express = require("express");
+const app = express();
 
 /* VSCode intellisense does not work
 const server = require('http').Server(app)
@@ -52,6 +52,12 @@ io.on('connection', socket => {
             socket.broadcast.to(roomId).emit('user-disconnected', userId)
         })
     })
+  
+    // client sent "message" when user click submit button. Sever sends it back to all client.
+    socket.on("message", (msg) => {
+      console.log("server socket msg" + msg);
+      io.sockets.emit("message1", msg);
+    });
 })
 
 server.listen(8000)
