@@ -45,6 +45,7 @@ io.on("connection", (socket) => {
     });
   });
 
+  // client sent "message" when user click submit button. Sever sends it back to all client.
   socket.on("message", (msg) => {
     console.log("server socket msg" + msg);
     io.sockets.emit("message1", msg);

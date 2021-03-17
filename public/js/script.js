@@ -100,74 +100,50 @@ var messages = document.getElementById("messages");
 var form = document.getElementById("form");
 var input = document.getElementById("input");
 
-// navigator.mediaDevices
-//   .getUserMedia({
-//     video: true,
-//     audio: true,
-//   })
-//   .then((stream) => {
-//     addVideoStream(myVideo, stream);
+navigator.mediaDevices
+  .getUserMedia({
+    video: true,
+    audio: true,
+  })
+  .then((stream) => {
+    addVideoStream(myVideo, stream);
 
-//     myPeer.on("call", (call) => {
-//       call.answer(stream);
-//       const video = document.createElement("video");
-//       call.on("stream", (userVideoStream) => {
-//         addVideoStream(video, userVideoStream);
-//       });
-//     });
+    myPeer.on("call", (call) => {
+      call.answer(stream);
+      const video = document.createElement("video");
+      call.on("stream", (userVideoStream) => {
+        addVideoStream(video, userVideoStream);
+      });
+    });
 
-//     socket.on("user-connected", (userId) => {
-//       sleep(2000);
-//       console.log("User connected: " + userId);
-//       connectToNewUser(userId, stream);
-//     });
-//   });
-
-socket.on("user-connected", (userId) => {
-  sleep(2000);
-  console.log("User connected: " + userId);
-  var item = document.createElement("li");
-  connectToNewUser(userId, item);
-});
+    socket.on("user-connected", (userId) => {
+      sleep(2000);
+      console.log("User connected: " + userId);
+      connectToNewUser(userId, stream);
+    });
+  });
 
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
-// function addVideoStream(video, stream) {
-//   console.log("new");
-//   video.srcObject = stream;
-//   video.addEventListener("loadedmetadata", () => {
-//     video.play();
-//   });
-//   videoGrid.append(video);
-// }
-
-function addChatMsg(item, msg) {
-  console.log("new msg");
-  item.textContent = msg;
-  messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
+function addVideoStream(video, stream) {
+  console.log("new");
+  video.srcObject = stream;
+  video.addEventListener("loadedmetadata", () => {
+    video.play();
+  });
+  videoGrid.append(video);
 }
 
-// function connectToNewUser(userId, stream) {
-//   const call = myPeer.call(userId, stream);
-//   const video = document.createElement("video");
-//   call.on("stream", (userVideoStream) => {
-//     addVideoStream(video, userVideoStream);
-//   });
-//   call.on("close", () => {
-//     video.remove();
-//   });
-
-//   peers[userId] = call;
-// }
-
-function connectToNewUser(userId, item) {
-  const call = myPeer.call(userId, item);
-  //   const video = document.createElement("video");
-  call.on("item", (i) => {
-    addChatMsg(item);
+function connectToNewUser(userId, stream) {
+  const call = myPeer.call(userId, stream);
+  const video = document.createElement("video");
+  call.on("stream", (userVideoStream) => {
+    addVideoStream(video, userVideoStream);
+  });
+  call.on("close", () => {
+    video.remove();
   });
 
   peers[userId] = call;
@@ -179,26 +155,18 @@ function sleep(ms) {
 }
 
 // chat
-
+// If user click submit button, send input value to server socket.
 form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    myPeer.on("call", (call) => {
-      var item = document.createElement("li");
-      item.textContent = msg;
-
-      window.scrollTo(0, document.body.scrollHeight);
-      call.on("chatmsg", (chatmsg) => {
-        messages.appendChild(item);
-      });
-    });
     socket.emit("message", input.value);
     console.log("listener: " + input.value);
     input.value = "";
   }
 });
 
+// Receive message1 from server.js and add given msg to all client
 socket.on("message1", function (msg) {
   console.log("html socketon");
   var item = document.createElement("li");
