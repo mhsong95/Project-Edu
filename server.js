@@ -15,10 +15,13 @@ app.get('/', (req, res) => {
 
 app.get('/create', (req, res) => {
     res.redirect(`/${uuidV4()}`)
+    //res.redirect('/room')
 })
 
+//app.get('/room', (req, res) => {
 app.get('/:room', (req, res) => {
     res.render('room', { roomId: req.params.room })
+    //res.render('room', { roomId: uuidV4() })
 })
 
 io.on('connection', socket => {

@@ -40,7 +40,6 @@ socket.on('user-disconnected', userId => {
 })
 
 function addVideoStream(video, stream) {
-    console.log("new")
     video.srcObject = stream
     video.addEventListener('loadedmetadata', () => {
         video.play()

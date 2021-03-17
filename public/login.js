@@ -37,3 +37,15 @@ function signupfunc(){
             window.alert(errorCode + errorMessage);
         });
 }
+
+function create_class(){
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          var uid = user.uid;
+          console.log(uid);
+          window.location.href = `/create?id=${uid}`;
+        } else {
+          console.log("fail")
+        }
+      });
+}
