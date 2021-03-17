@@ -5,59 +5,59 @@ const app = express();
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 */
-const server = require("http").createServer(app);
-const io = new (require("socket.io").Server)(server);
+const server = require('http').createServer(app);
+const io = new (require('socket.io').Server)(server);
 
-const { v4: uuidV4 } = require("uuid");
-var url = require("url");
+const { v4: uuidV4 } = require('uuid')
+var url = require('url')
 
-app.set("view engine", "ejs");
-app.engine("html", require("ejs").renderFile);
-app.use(express.static("public"));
+app.set('view engine', 'ejs')
+app.engine('html', require('ejs').renderFile)
+app.use(express.static('public'))
 
-app.get("/", (req, res) => {
-  res.render("../public/index.html");
-});
+app.get('/', (req, res) => {
+    res.render('../public/index.html');
+})
 
-app.get("/create", (req, res) => {
-  var _url = url.parse(req.url, true).query;
-  user = _url.user;
-  res.redirect("/room?user=" + user);
-});
+app.get('/create', (req, res) => {
+    var _url = url.parse(req.url, true).query
+    user = _url.user
+    res.redirect('/room?user=' + user)
+})
 
-app.get("/join", (req, res) => {
-  var _url = url.parse(req.url, true).query;
-  user = _url.user;
-  res.render("room", { roomId: _url.id, User: user, ifcreate: false });
-});
+app.get('/join', (req, res) => {
+    var _url = url.parse(req.url, true).query
+    user = _url.user
+    res.render('room', { roomId: _url.id, User: user, ifcreate: false })
+})
 
-app.get("/room", (req, res) => {
-  res.render("room", { roomId: uuidV4(), User: user, ifcreate: true });
-});
+app.get('/room', (req, res) => {
+    res.render('room', { roomId: uuidV4(), User: user, ifcreate: true })
+})
 
-io.on("connection", (socket) => {
-  socket.on("join-room", (roomId, userId) => {
-    // If the room roomId does not exist, the user is the creator of the room.
-    // You can signal him/her that you are a creator.
-    if (!io.sockets.adapter.rooms.has(roomId)) {
-      socket.join(roomId);
-      socket.emit("room-created");
-    } else {
-      socket.join(roomId);
-      socket.broadcast.to(roomId).emit("user-connected", userId);
-    }
-    console.log(roomId, userId);
+io.on('connection', socket => {
+    socket.on('join-room', (roomId, userId) => {
+        // If the room roomId does not exist, the user is the creator of the room.
+        // You can signal him/her that you are a creator.
+        if (!io.sockets.adapter.rooms.has(roomId)) {
+            socket.join(roomId);
+            socket.emit('room-created');
+        } else {
+            socket.join(roomId);
+            socket.broadcast.to(roomId).emit('user-connected', userId);
+        }
+        console.log(roomId, userId)
 
-    socket.on("disconnect", () => {
-      socket.broadcast.to(roomId).emit("user-disconnected", userId);
+        socket.on('disconnect', () => {
+            socket.broadcast.to(roomId).emit('user-disconnected', userId)
+        })
+    })
+  
+    // client sent "message" when user click submit button. Sever sends it back to all client.
+    socket.on("message", (msg) => {
+      console.log("server socket msg" + msg);
+      io.sockets.emit("message1", msg);
     });
-  });
+})
 
-  // client sent "message" when user click submit button. Sever sends it back to all client.
-  socket.on("message", (msg) => {
-    console.log("server socket msg" + msg);
-    io.sockets.emit("message1", msg);
-  });
-});
-
-server.listen(8000);
+server.listen(8000)

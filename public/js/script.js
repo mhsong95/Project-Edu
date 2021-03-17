@@ -60,11 +60,11 @@ socket.on("user-disconnected", (userId) => {
 });
 
 function addVideoStream(video, stream) {
-  video.srcObject = stream;
-  video.addEventListener("loadedmetadata", () => {
-    video.play();
-  });
-  videoGrid.append(video);
+    video.srcObject = stream
+    video.addEventListener('loadedmetadata', () => {
+        video.play()
+    })
+    videoGrid.append(video)
 }
 
 function connectToNewUser(userId, stream) {
