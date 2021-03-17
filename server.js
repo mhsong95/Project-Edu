@@ -1,7 +1,13 @@
 const express = require('express')
 const app = express()
+
+/* VSCode intellisense does not work
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
+*/
+const server = require('http').createServer(app);
+const io = new (require('socket.io').Server)(server);
+
 const { v4: uuidV4 } = require('uuid')
 var url = require('url')
 
@@ -31,9 +37,16 @@ app.get('/room', (req, res) => {
 
 io.on('connection', socket => {
     socket.on('join-room', (roomId, userId) => {
+        // If the room roomId does not exist, the user is the creator of the room.
+        // You can signal him/her that you are a creator.
+        if (!io.sockets.adapter.rooms.has(roomId)) {
+            socket.join(roomId);
+            socket.emit('room-created');
+        } else {
+            socket.join(roomId);
+            socket.broadcast.to(roomId).emit('user-connected', userId);
+        }
         console.log(roomId, userId)
-        socket.join(roomId)
-        socket.broadcast.to(roomId).emit('user-connected', userId)
 
         socket.on('disconnect', () => {
             socket.broadcast.to(roomId).emit('user-disconnected', userId)
@@ -41,4 +54,4 @@ io.on('connection', socket => {
     })
 })
 
-server.listen(80)
+server.listen(8000)
