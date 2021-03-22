@@ -60,11 +60,11 @@ socket.on("user-disconnected", (userId) => {
 });
 
 function addVideoStream(video, stream) {
-    video.srcObject = stream
-    video.addEventListener('loadedmetadata', () => {
-        video.play()
-    })
-    videoGrid.append(video)
+  video.srcObject = stream;
+  video.addEventListener("loadedmetadata", () => {
+    video.play();
+  });
+  videoGrid.append(video);
 }
 
 function connectToNewUser(userId, stream) {
@@ -101,3 +101,79 @@ socket.on("message1", function (msg) {
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+// webgazer
+// store calibration
+window.saveDataAcrossSessions = true;
+
+const LOOK_DELAY = 3000; // 3 second
+const LEFT_CUTOFF = window.innerWidth / 4;
+const RIGHT_CUTOFF = window.innerWidth - window.innerWidth / 4;
+
+let startLookTime = Number.POSITIVE_INFINITY;
+let lookDirection = null;
+
+webgazer
+  .setGazeListener((data, timestamp) => {
+    // console.log(data, timestamp);
+    const videogrid = document.getElementById("video-grid");
+    const left = videogrid.offsetLeft;
+    const right =
+      window.innerWidth - videogrid.offsetLeft - videogrid.offsetWidth;
+    const top = videogrid.offsetTop;
+    const bottom =
+      window.innerHeight - videogrid.offsetTop - videogrid.offsetHeight;
+
+    if (data == null || lookDirection === "STOP") return;
+
+    if (
+      data.x < left &&
+      lookDirection !== "LEFT" &&
+      lookDirection !== "RESET"
+    ) {
+      startLookTime = timestamp;
+      lookDirection = "LEFT";
+    } else if (
+      data.x > right &&
+      lookDirection !== "RIGHT" &&
+      lookDirection !== "RESET"
+    ) {
+      startLookTime = timestamp;
+      lookDirection = "RIGHT";
+    } else if (
+      data.y < top &&
+      lookDirection != "TOP" &&
+      lookDirection !== "RESET"
+    ) {
+      startLookTime = timestamp;
+      lookDirection = "TOP";
+    } else if (
+      data.y > bottom &&
+      lookDirection != "BOTTOM" &&
+      lookDirection !== "RESET"
+    ) {
+      startLookTime = timestamp;
+      lookDirection = "BOTTOM";
+    } else if (
+      data.x >= left &&
+      data.x <= right &&
+      data.y >= top &&
+      data.y <= bottom
+    ) {
+      startLookTime = Number.POSITIVE_INFINITY; // restart timer
+      lookDirection = null;
+    }
+
+    if (startLookTime + LOOK_DELAY < timestamp) {
+      videogrid.style.borderColor = "red";
+
+      startLookTime = Number.POSITIVE_INFINITY;
+      lookDirection = "STOP";
+      setTimeout(() => {
+        lookDirection = "RESET";
+      }, 200);
+    }
+  })
+  .begin();
+
+// webgazer.showVideoPreview(false).showPredictionPoints(false);
