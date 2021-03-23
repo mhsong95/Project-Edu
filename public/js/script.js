@@ -102,3 +102,59 @@ socket.on("message1", function (msg) {
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+// webgazer
+// store calibration
+window.saveDataAcrossSessions = true;
+
+const LOOK_DELAY = 3000; // 3 second
+
+let startLookTime = Number.POSITIVE_INFINITY;
+let lookDirection = null;
+
+webgazer
+  .setGazeListener((data, timestamp) => {
+    // console.log(data, timestamp);
+    const videogrid = document.getElementById("video-grid");
+    const left = videogrid.offsetLeft;
+    const right =
+      videogrid.offsetLeft + videogrid.offsetWidth;
+    const top = videogrid.offsetTop;
+    const bottom =
+      videogrid.offsetTop + videogrid.offsetHeight;
+
+    if (data == null || lookDirection === "STOP") return;
+
+    if (
+      data.x >= left &&
+      data.x <= right &&
+      data.y >= top &&
+      data.y <= bottom
+    ) {
+      videogrid.style.backgroundColor = "blue";
+      startLookTime = Number.POSITIVE_INFINITY; // restart timer
+      lookDirection = null;
+    }
+    else if (
+      lookDirection !== "RESET" && lookDirection === null){
+        videogrid.style.backgroundColor = "yellow";
+        startLookTime = timestamp;
+        lookDirection = "OUT"
+      }
+
+    if (startLookTime + LOOK_DELAY < timestamp) {
+      console.log("ohoh")
+      console.log(left, right, top, bottom)
+      videogrid.style.backgroundColor = "red";
+
+      startLookTime = Number.POSITIVE_INFINITY;
+      lookDirection = "STOP";
+      setTimeout(() => {
+        lookDirection = "RESET";
+      }, 200);
+    }
+  })
+  .begin();
+
+// uncomment to hide videopreview and predictionpoints of webgazer
+// webgazer.showVideoPreview(false).showPredictionPoints(false);
