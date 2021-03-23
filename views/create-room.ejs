@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Create New Room</title>
+	<link rel="stylesheet" type="text/css" href="/css/room-entry.css">
+</head>
+
+<body>
+	<div class="enter-passcode-form">
+		<h1>Create New Room</h1>
+		<form method="POST">
+			<input type="text" name="roomId" id="roomId" value="<%= roomId %>" readonly />
+			<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" required />
+			<input type="submit" value="CREATE" />
+			<p>You can join the room as a <b>supervisor</b> using this passcode.</p>
+		</form>
+	</div>
+
+	<script>
+		const creationFailed = <%= creationFailed %>;
+		if (creationFailed) {
+			alert("Oops! The room already exists or you did not enter the passcode.");
+		}
+	</script>
+</body>
+
+</html>

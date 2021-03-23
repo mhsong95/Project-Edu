@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Join Room</title>
+	<link rel="stylesheet" type="text/css" href="/css/room-entry.css">
+</head>
+
+<body>
+	<div class="enter-passcode-form">
+		<h1>Join Room</h1>
+		<form method="POST">
+			<input type="text" name="roomId" id="roomId" value="<%= roomId %>" readonly />
+			<div id="passcode-fields" style="display:none">
+				<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" required />
+				<input type="submit" value="Join as a supervisor" />
+				<button id="cancel-passcode" onclick="hidePasscodeFields()">Cancel</button>
+			</div>
+		</form>
+		<div id="join-buttons">
+			<button id="join-button" onclick="window.location.href += '/participant';">Join</button>
+			<button id="join-supervisor-button" onclick="showPasscodeFields()">Supervisor Mode</button>
+		</div>
+	</div>
+	<script>
+		let joinButtons = document.getElementById("join-buttons");
+		let passcodeFields = document.getElementById("passcode-fields");
+
+		function showPasscodeFields() {
+			joinButtons.style.display = "none";
+			passcodeFields.style.display = "";
+		}
+
+		function hidePasscodeFields() {
+			passcodeFields.style.display = "none";
+			joinButtons.style.display = "";
+		}
+
+		const joinFailed = <%= joinFailed %>;
+		if (joinFailed) {
+			alert("Wrong passcode!");
+		}
+	</script>
+</body>
+
+</html>
