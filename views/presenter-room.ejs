@@ -10,8 +10,8 @@
     </script>
     <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js" defer></script>
     <script src="/socket.io/socket.io.js" defer></script>
-    <script src="/js/script.js" defer></script>
-    <title>Participant</title>
+    <script src="/js/presenter.js" defer></script>
+    <title>Presenter</title>
     <style>
         #video-grid {
             display: grid;
@@ -84,6 +84,7 @@
 </head>
 
 <body>
+    <button onclick="alert(`${window.location.origin}/${ROOM_ID}`)">Invite</button>
     <div id='video-grid'></div>
     <ul id="messages"></ul>
     <form id="form" action="">

@@ -1,0 +1,68 @@
+.enter-passcode-form {
+  width: 300px;
+  margin: 0 auto;
+  font-family: Tahoma, Geneva, sans-serif;
+}
+
+.enter-passcode-form h1 {
+  text-align: center;
+  color: #4d4d4d;
+  font-size: 24px;
+  padding: 20px 0 20px 0;
+}
+
+.enter-passcode-form input[type="text"] {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #dddddd;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.enter-passcode-form input[type="number"] {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #dddddd;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.enter-passcode-form input[type="submit"] {
+  width: 100%;
+  padding: 15px;
+  background-color: #535b63;
+  border: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.enter-passcode-form p {
+  text-align: center;
+  color: #4d4d4d;
+  font-size: 18px;
+}
+
+.enter-passcode-form button {
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 10px;
+  background-color: #535b63;
+}
+
+#join-supervisor-button {
+  background-color: lightseagreen;
+}
+
+#cancel-passcode {
+  background-color: lightseagreen;
+}
