@@ -17,9 +17,26 @@ const myUserIdPromise = new Promise((resolve) => {
 const myVideo = document.createElement("video");
 myVideo.muted = true;
 
-const peers = {};
+let presenter, supervisor;
 
-var isCreator = false; // Indicates whether you have created a room, or just joined
+// A call from the presenter
+myPeer.on("call", (call) => {
+  call.answer();  // You just watch the presenter.
+  const video = document.createElement("video");
+
+  call.on("stream", (userVideoStream) => {
+    addVideoStream(video, userVideoStream);
+  });
+
+  call.on("close", () => {
+    video.remove();
+  });
+
+  if (presenter) {
+    presenter.close();
+  }
+  presenter = call;
+});
 
 navigator.mediaDevices
   .getUserMedia({
@@ -29,35 +46,15 @@ navigator.mediaDevices
   .then((stream) => {
     addVideoStream(myVideo, stream);
 
-    myPeer.on("call", (call) => {
-      call.answer(stream);
-      const video = document.createElement("video");
-      call.on("stream", (userVideoStream) => {
-        addVideoStream(video, userVideoStream);
-      });
-    });
-
-    socket.on("user-connected", (userId) => {
-      console.log("User connected: " + userId);
-
-      // Connect to the user only if you are a room creator.
-      if (isCreator) {
-        connectToNewUser(userId, stream);
-      }
-    });
-
-    socket.on("room-created", () => {
-      isCreator = true;
+    // The server tells you to connect to a new supervisor.
+    socket.on("call-to", (userId) => {
+      callSupervisor(userId, stream);
     });
 
     myUserIdPromise.then((id) => {
-      socket.emit("join-room", ROOM_ID, id);
+      socket.emit("participant-joined", ROOM_ID, id);
     });
   });
-
-socket.on("user-disconnected", (userId) => {
-  if (peers[userId]) peers[userId].close();
-});
 
 function addVideoStream(video, stream) {
   video.srcObject = stream;
@@ -67,18 +64,26 @@ function addVideoStream(video, stream) {
   videoGrid.append(video);
 }
 
-function connectToNewUser(userId, stream) {
+// Call a supervisor to provide the participant's stream.
+// The callee will answer this call with no stream,
+// thus one-way (participant => supervisor) will be established.
+function callSupervisor(userId, stream) {
   const call = myPeer.call(userId, stream);
-  const video = document.createElement("video");
 
+  // TODO: it isn't sure if this will work. The callee
+  // will answer this call with no stream.
   call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream);
-  });
-  call.on("close", () => {
-    video.remove();
+    console.log(`Stream from ${userId} coming in.`);
   });
 
-  peers[userId] = call;
+  call.on("close", () => {
+    console.log(`Supervisor closed: ${userId}`);
+  });
+
+  if (supervisor) {
+    supervisor.close();
+  }
+  supervisor = call;
 }
 
 // chat
