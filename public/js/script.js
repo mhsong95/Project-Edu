@@ -94,8 +94,6 @@ function callSupervisor(userId, stream) {
   conn = userId;
 }
 
-// TODO: Send concentrate data to supervisor
-
 // chat
 // If user click submit button, send input value to server socket.
 form.addEventListener("submit", function (e) {
@@ -131,6 +129,7 @@ function add_concentrate_log(t, level) {
   send_data([userID, t, level]);
 }
 
+// Send data to presenter or spervisor.
 function send_data(data) {
   var con = myPeer.connect(conn);
   con.on("open", function () {
