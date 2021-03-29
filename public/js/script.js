@@ -5,12 +5,17 @@ const myPeer = new Peer(undefined, {
   port: "8080",
 });
 
+var concent = [];
+var userID = "";
+
 // The value of this promise is used to broadcast that you've joined the room.
 // Broadcasting occurs when getUserMedia completes, thus all event listeners
 // (e.g. myPeer.on('call')) have had set.
 const myUserIdPromise = new Promise((resolve) => {
   myPeer.on("open", (id) => {
     resolve(id); // My user ID
+    userID = id;
+    console.log("UserID is " + userID);
   });
 });
 
@@ -18,10 +23,11 @@ const myVideo = document.createElement("video");
 myVideo.muted = true;
 
 let presenter, supervisor;
+let conn;
 
 // A call from the presenter
 myPeer.on("call", (call) => {
-  call.answer();  // You just watch the presenter.
+  call.answer(); // You just watch the presenter.
   const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
@@ -36,6 +42,7 @@ myPeer.on("call", (call) => {
     presenter.close();
   }
   presenter = call;
+  conn = call.peer;
 });
 
 navigator.mediaDevices
@@ -84,6 +91,7 @@ function callSupervisor(userId, stream) {
     supervisor.close();
   }
   supervisor = call;
+  conn = userId;
 }
 
 // chat
@@ -116,16 +124,27 @@ const LOOK_DELAY = 3000; // 3 second
 let startLookTime = Number.POSITIVE_INFINITY;
 let lookDirection = null;
 
+function add_concentrate_log(t, level) {
+  concent.push([userID, t, level]);
+  send_data([userID, t, level]);
+}
+
+// Send data to presenter or spervisor.
+function send_data(data) {
+  var con = myPeer.connect(conn);
+  con.on("open", function () {
+    con.send(data);
+  });
+}
+
 webgazer
   .setGazeListener((data, timestamp) => {
     // console.log(data, timestamp);
     const videogrid = document.getElementById("video-grid");
     const left = videogrid.offsetLeft;
-    const right =
-      videogrid.offsetLeft + videogrid.offsetWidth;
+    const right = videogrid.offsetLeft + videogrid.offsetWidth;
     const top = videogrid.offsetTop;
-    const bottom =
-      videogrid.offsetTop + videogrid.offsetHeight;
+    const bottom = videogrid.offsetTop + videogrid.offsetHeight;
 
     if (data == null || lookDirection === "STOP") return;
 
@@ -138,18 +157,19 @@ webgazer
       videogrid.style.backgroundColor = "blue";
       startLookTime = Number.POSITIVE_INFINITY; // restart timer
       lookDirection = null;
+      add_concentrate_log(timestamp, 10);
+    } else if (lookDirection !== "RESET" && lookDirection === null) {
+      videogrid.style.backgroundColor = "yellow";
+      startLookTime = timestamp;
+      lookDirection = "OUT";
+      add_concentrate_log(timestamp, 5);
     }
-    else if (
-      lookDirection !== "RESET" && lookDirection === null){
-        videogrid.style.backgroundColor = "yellow";
-        startLookTime = timestamp;
-        lookDirection = "OUT"
-      }
 
     if (startLookTime + LOOK_DELAY < timestamp) {
-      console.log("ohoh")
-      console.log(left, right, top, bottom)
+      console.log("ohoh");
+      console.log(left, right, top, bottom);
       videogrid.style.backgroundColor = "red";
+      add_concentrate_log(timestamp, 0);
 
       startLookTime = Number.POSITIVE_INFINITY;
       lookDirection = "STOP";

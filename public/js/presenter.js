@@ -5,12 +5,15 @@ const myPeer = new Peer(undefined, {
   port: "8080",
 });
 
+var myID = "";
+
 // The value of this promise is used to broadcast that you've joined the room.
 // Broadcasting occurs when getUserMedia completes, thus all event listeners
 // (e.g. myPeer.on('call')) have had set.
 const myUserIdPromise = new Promise((resolve) => {
   myPeer.on("open", (id) => {
     resolve(id); // My user ID
+    myID = id;
   });
 });
 
@@ -30,7 +33,7 @@ navigator.mediaDevices
     audio: true,
   })
   .then((stream) => {
-    addVideoStream(myVideo, stream);
+    addVideoStream(myVideo, stream, myID);
 
     // Call from a participant to be 'supervised'.
     myPeer.on("call", (call) => {
@@ -38,7 +41,7 @@ navigator.mediaDevices
       const video = document.createElement("video");
 
       call.on("stream", (userVideoStream) => {
-        addVideoStream(video, userVideoStream);
+        addVideoStream(video, userVideoStream, call.peer);
       });
 
       call.on("close", () => {
@@ -85,13 +88,31 @@ navigator.mediaDevices
     });
   });
 
-function addVideoStream(video, stream) {
+function addVideoStream(video, stream, video_id) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
+  video.setAttribute("id", video_id);
   videoGrid.append(video);
 }
+
+// Get concentrate data from participant and change border color of their video.
+myPeer.on("connection", function (conn) {
+  conn.on("data", function (data) {
+    let video_id = data[0];
+    let t = data[1];
+    let value = data[2];
+    const v = document.getElementById(video_id);
+    if (value === 0) {
+      v.style.border = "5px solid red";
+    } else if (value === 5) {
+      v.style.border = "3px solid yellow";
+    } else {
+      v.style.border = "0px";
+    }
+  });
+});
 
 // Call a participant to provide the presenter's stream.
 // The callee will answer this call with no stream (or with audio stream),

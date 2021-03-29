@@ -25,7 +25,7 @@ let priority, capacity;
 (function setPriority() {
   priority = Number(prompt("Priority? (>= 1)"));
   if (!Number.isInteger(priority) || priority < 1) {
-    alert("Enter an integer greater than or equal to 1")
+    alert("Enter an integer greater than or equal to 1");
     setPriority();
   }
 })();
@@ -43,7 +43,7 @@ myPeer.on("call", (call) => {
   const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream);
+    addVideoStream(video, userVideoStream, call.peer);
   });
 
   call.on("close", () => {
@@ -51,6 +51,23 @@ myPeer.on("call", (call) => {
   });
 
   observees[call.peer] = call;
+});
+
+// Get concentrate data from participant and change border color of their video.
+myPeer.on("connection", function (conn) {
+  conn.on("data", function (data) {
+    let video_id = data[0];
+    let t = data[1];
+    let value = data[2];
+    const v = document.getElementById(video_id);
+    if (value === 0) {
+      v.style.border = "5px solid red";
+    } else if (value === 5) {
+      v.style.border = "3px solid yellow";
+    } else {
+      v.style.border = "0px";
+    }
+  });
 });
 
 // When a participant leaves the room.
@@ -66,10 +83,11 @@ myUserIdPromise.then((id) => {
   socket.emit("supervisor-joined", ROOM_ID, id, priority, capacity);
 });
 
-function addVideoStream(video, stream) {
+function addVideoStream(video, stream, video_id) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
+  video.setAttribute("id", video_id);
   videoGrid.append(video);
 }
