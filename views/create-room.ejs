@@ -11,6 +11,69 @@
 
 <body>
 	<div class="enter-passcode-form">
+		<div style="margin: 25%">
+			<div id="video-grid"></div>
+		</div>
+		<script src="/js/gazer.js" type="text/javascript" ></script>
+		<script>
+			function check(){
+				window.saveDataAcrossSessions = true;
+
+				const LOOK_DELAY = 3000; // 3 second
+
+				let startLookTime = Number.POSITIVE_INFINITY;
+				let lookDirection = null;
+
+				webgazer
+				.setGazeListener((data, timestamp) => {
+					const videogrid = document.getElementById("video-grid");
+					const left = videogrid.offsetLeft;
+					const right =
+					videogrid.offsetLeft + videogrid.offsetWidth;
+					const top = videogrid.offsetTop;
+					const bottom =
+					videogrid.offsetTop + videogrid.offsetHeight;
+
+					if (data == null || lookDirection === "STOP") {
+						console.log('nonono')
+						return;
+					}
+					else{
+						console.log(data)
+					}
+
+					if (
+						data.x >= left &&
+						data.x <= right &&
+						data.y >= top &&
+						data.y <= bottom
+					) {
+						videogrid.style.backgroundColor = "blue";
+						startLookTime = Number.POSITIVE_INFINITY; // restart timer
+						lookDirection = null;
+					}
+					else if (
+						lookDirection !== "RESET" && lookDirection === null){
+						videogrid.style.backgroundColor = "yellow";
+						startLookTime = timestamp;
+						lookDirection = "OUT"
+					}
+
+					if (startLookTime + LOOK_DELAY < timestamp) {
+						console.log("ohoh")
+						console.log(left, right, top, bottom)
+						videogrid.style.backgroundColor = "red";
+
+						startLookTime = Number.POSITIVE_INFINITY;
+						lookDirection = "STOP";
+						setTimeout(() => {
+							lookDirection = "RESET";
+						}, 200);
+					}
+				})
+				.begin();
+			}
+		</script>
 		<h1>Create New Room</h1>
 		<form method="POST">
 			<label for="room_name">Room name </label>
@@ -18,6 +81,7 @@
 			<label for="passcode">Passcode</label>
 			<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" value="<%= passcode %>" required />
 			<input type="submit" value="CREATE" />
+			<button onclick='check()'>check</button>
 			<p>You can join the room as a <b>supervisor</b> using this passcode.</p>
 		</form>
 	</div>
