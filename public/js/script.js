@@ -5,7 +5,6 @@ const myPeer = new Peer(undefined, {
   port: "8080",
 });
 
-var concent = [];
 var userID = "";
 
 // The value of this promise is used to broadcast that you've joined the room.
@@ -125,16 +124,19 @@ let startLookTime = Number.POSITIVE_INFINITY;
 let lookDirection = null;
 
 function add_concentrate_log(t, level) {
-  concent.push([userID, t, level]);
   send_data([userID, t, level]);
 }
 
-// Send data to presenter or spervisor.
+// data: [userID, timestamp, concentrate_level]
 function send_data(data) {
+  // Send data to presenter or supervisor.
   var con = myPeer.connect(conn);
   con.on("open", function () {
     con.send(data);
   });
+
+  // Send data to server
+  socket.emit("concent_data", data);
 }
 
 webgazer

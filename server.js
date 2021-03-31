@@ -163,6 +163,11 @@ app.get("/:room/participant", (req, res) => {
 });
 
 /* ################ Socket.io logic ################ */
+// Dictionary about student's concentrate data
+// concentDict : {student1ID: [
+//                  [studentId, timestamp, concentrate degree(0 or 5 or 10)], ... ],
+//                student2ID: ...}
+var concentDict = {};
 
 io.on("connection", (socket) => {
   // When a presenter joins a room.
@@ -190,10 +195,19 @@ io.on("connection", (socket) => {
     participantJoined(socket, roomId, userId);
   });
 
-  // client sent "message" when user click submit button. Sever sends it back to all client.
+  // Client sent "message" when user click submit button. Sever sends it back to all client.
   socket.on("message", (msg) => {
     console.log("server socket msg" + msg);
     io.sockets.emit("message1", msg);
+  });
+
+  // get concentrate data from students
+  socket.on("concent_data", (data) => {
+    if (data[0] in concentDict) {
+      concentDict[data[0]].push(data);
+    } else {
+      concentDict[data[0]] = [data];
+    }
   });
 });
 
