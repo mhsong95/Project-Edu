@@ -26,6 +26,7 @@ supervisorPeer.on("open", (id) => {
   supervisorId = id;
 });
 
+const screen_vid = document.getElementById("screen-video");
 /* ####### Data structures ####### */
 
 // Dictionary of participants' names.
@@ -37,6 +38,27 @@ const audiences = {};
 // Dictionary of observees' (those being watched by you) call objects.
 // observees: { user1ID: call1, user2ID: call2, ... }
 const observees = {};
+navigator.mediaDevices.getDisplayMedia().then((stream) => {
+  screen_vid.srcObject = stream;
+  screen_vid.addEventListener("loadedmetadata", () => {
+    screen_vid.play();
+  });
+  socket.on("participant-joined", (userId) => {
+    console.log(`Participant joined: ${userId}`);
+
+    // Call the participant to provide your stream.
+    callParticipant(userId, stream, true);
+  });
+
+  // When this presenter has re-entered to the room,
+  // the server will make you to call those participants
+  // who were already in the room.
+  socket.on("call-to", (peers) => {
+    for (let userId of peers) {
+      callParticipant(userId, stream, true);
+    }
+  });
+});
 
 /* ####### socket.io data ####### */
 
@@ -60,7 +82,7 @@ socket.on("get-ready", (participants) => {
 // Error cases: Not authorized or presenter already exists.
 socket.on("rejected", (msg) => {
   alert(msg);
-  location.href = `../${ROOM_ID}`;  // redirect to room joining page.
+  location.href = `../${ROOM_ID}`; // redirect to room joining page.
 });
 
 const myVideo = document.createElement("video");
@@ -123,7 +145,7 @@ navigator.mediaDevices
       participantDict[userId] = name;
       if (isReady) {
         // Call the participant only if him/her can identify you.
-        callParticipant(userId, stream);
+        callParticipant(userId, stream, false);
       }
     });
 
@@ -186,8 +208,8 @@ supervisorPeer.on("connection", function (conn) {
 });
 
 // Call a new participant. The participant will answer with audio stream.
-function callParticipant(userId, stream) {
-  const call = presenterPeer.call(userId, stream);
+function callParticipant(userId, stream, screen) {
+  const call = presenterPeer.call(userId, stream, [screen]);
   const audio = document.createElement("audio");
 
   call.on("stream", (userAudioStream) => {
