@@ -156,12 +156,12 @@ webgazer
       data.y >= top &&
       data.y <= bottom
     ) {
-      videogrid.style.backgroundColor = "blue";
+      // videogrid.style.backgroundColor = "blue";
       startLookTime = Number.POSITIVE_INFINITY; // restart timer
       lookDirection = null;
       add_concentrate_log(timestamp, 10);
     } else if (lookDirection !== "RESET" && lookDirection === null) {
-      videogrid.style.backgroundColor = "yellow";
+      // videogrid.style.backgroundColor = "yellow";
       startLookTime = timestamp;
       lookDirection = "OUT";
       add_concentrate_log(timestamp, 5);
@@ -170,7 +170,7 @@ webgazer
     if (startLookTime + LOOK_DELAY < timestamp) {
       console.log("ohoh");
       console.log(left, right, top, bottom);
-      videogrid.style.backgroundColor = "red";
+      // videogrid.style.backgroundColor = "red";
       add_concentrate_log(timestamp, 0);
 
       startLookTime = Number.POSITIVE_INFINITY;
