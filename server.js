@@ -169,6 +169,12 @@ app.get("/:room/participant", (req, res) => {
 //                student2ID: ...}
 var concentDict = {};
 
+// Dictionary about student's concentrate average
+// concentDict : {student1ID: [
+//                  [avg, enterTime, dataSum, lastData, lastTime],
+//                student2ID: ...}
+var avgDict = {};
+
 io.on("connection", (socket) => {
   // When a presenter joins a room.
   socket.on("presenter-joined", (roomId, userId) => {
@@ -205,9 +211,25 @@ io.on("connection", (socket) => {
   socket.on("concent_data", (data) => {
     if (data[0] in concentDict) {
       concentDict[data[0]].push(data);
+      var st = avgDict[data[0]][1];
+      var sum = avgDict[data[0]][2];
+      var prev = avgDict[data[0]][3];
+
+      avgDict[data[0]][2] =
+        sum + (data[1] - avgDict[data[0]][4] - 2) * prev + data[2];
+      avgDict[data[0]][0] = avgDict[data[0]][2] / ((data[1] - st) * 10);
+      avgDict[data[0]][3] = data[2];
+      avgDict[data[0]][4] = data[1];
+
+      console.log("dict", avgDict);
     } else {
       concentDict[data[0]] = [data];
+      avgDict[data[0]] = [data[2], data[1], data[2], data[2], data[1]];
+
+      console.log("dict", avgDict);
+      // startAlert();
     }
+    console.log(concentDict);
   });
 });
 
@@ -250,6 +272,16 @@ function presenterJoined(socket, roomId, userId) {
     socket.join(roomId);
     room.addSupervisor(presenter);
   }
+
+  update_concent = setInterval(function () {
+    var sumConcent = 0;
+    var sumTime = 0;
+    for (var key in avgDict) {
+      sumConcent = sumConcent + avgDict[key][2];
+      sumTime = sumTime + avgDict[key][4] - avgDict[key][1];
+    }
+    socket.emit("update-concent", (sumConcent / (sumTime * 10)) * 100);
+  }, 10000);
 }
 
 // Sets up event listeners for supervisors.
@@ -288,6 +320,8 @@ function participantJoined(socket, roomId, userId) {
     socket.on("disconnect", () => {
       room.removeParticipant(userId);
       socket.broadcast.to(roomId).emit("participant-leaved", userId);
+      delete concentDict[userId];
+      delete avgDict[userId];
     });
 
     socket.join(roomId);

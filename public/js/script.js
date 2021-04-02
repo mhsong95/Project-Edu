@@ -157,9 +157,11 @@ webgazer
       data.y <= bottom
     ) {
       // videogrid.style.backgroundColor = "blue";
+      if (lookDirection !== null) {
+        add_concentrate_log(timestamp, 10);
+      }
       startLookTime = Number.POSITIVE_INFINITY; // restart timer
       lookDirection = null;
-      add_concentrate_log(timestamp, 10);
     } else if (lookDirection !== "RESET" && lookDirection === null) {
       // videogrid.style.backgroundColor = "yellow";
       startLookTime = timestamp;
