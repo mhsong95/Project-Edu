@@ -273,6 +273,7 @@ function presenterJoined(socket, roomId, userId) {
     room.addSupervisor(presenter);
   }
 
+  // Send average concentrate data to presenter.
   update_concent = setInterval(function () {
     var sumConcent = 0;
     var sumTime = 0;

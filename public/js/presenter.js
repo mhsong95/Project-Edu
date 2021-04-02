@@ -182,6 +182,7 @@ draw_chart = function (value) {
   if (value == null) {
     value = 100;
   }
+
   // Build the chart
   Highcharts.chart("container", {
     chart: {
@@ -196,7 +197,6 @@ draw_chart = function (value) {
     },
     tooltip: {
       enabled: false,
-      // pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>",
     },
     plotOptions: {
       pie: {
