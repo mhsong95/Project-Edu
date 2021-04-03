@@ -153,3 +153,83 @@ socket.on("message1", function (msg) {
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+/* ######### concentrate graph ############ */
+// Update concentrate data.
+socket.on("update-concent", function (value) {
+  console.log(value);
+  draw_chart(value);
+});
+
+// Radialize the colors
+Highcharts.setOptions({
+  colors: Highcharts.map(Highcharts.getOptions().colors, function (color) {
+    return {
+      radialGradient: {
+        cx: 0.5,
+        cy: 0.3,
+        r: 0.7,
+      },
+      stops: [
+        [0, color],
+        [1, Highcharts.color(color).brighten(-0.3).get("rgb")], // darken
+      ],
+    };
+  }),
+});
+
+draw_chart = function (value) {
+  if (value == null) {
+    value = 100;
+  }
+
+  // Build the chart
+  Highcharts.chart("container", {
+    chart: {
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      type: "pie",
+      animation: false,
+    },
+    title: {
+      text: null,
+    },
+    tooltip: {
+      enabled: false,
+    },
+    plotOptions: {
+      pie: {
+        allowPointSelect: false,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: true,
+          format: "<b>{point.name}</b><br>{point.percentage:.1f} %",
+          distance: -40,
+        },
+      },
+      series: {
+        animation: false,
+        states: {
+          hover: {
+            enabled: false,
+          },
+        },
+      },
+    },
+    series: [
+      {
+        name: "Share",
+        data: [
+          { name: "Good", y: value },
+          { name: "Bad", y: 100 - value },
+        ],
+      },
+    ],
+    credits: {
+      enabled: false,
+    },
+  });
+};
+
+draw_chart(null);
