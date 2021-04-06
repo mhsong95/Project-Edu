@@ -1,31 +1,70 @@
 const socket = io("/");
 const videoGrid = document.getElementById("video-grid");
-const myPeer = new Peer(undefined, {
+const audioGrid = document.getElementById("audio-grid");
+
+/* ####### Peer setup ####### */
+
+// The Peer instance to manage calls as a presenter.
+const presenterPeer = new Peer(undefined, {
+  host: "/",
+  port: "8080",
+});
+// The Peer instance to manage calls as a supervisor.
+const supervisorPeer = new Peer(undefined, {
   host: "/",
   port: "8080",
 });
 
-var myID = "";
+let presenterId = ""; // ID as a presenter.
+let supervisorId = ""; // ID as a supervisor.
 
-// The value of this promise is used to broadcast that you've joined the room.
-// Broadcasting occurs when getUserMedia completes, thus all event listeners
-// (e.g. myPeer.on('call')) have had set.
-const myUserIdPromise = new Promise((resolve) => {
-  myPeer.on("open", (id) => {
-    resolve(id); // My user ID
-    myID = id;
-  });
+// Resolve IDs.
+presenterPeer.on("open", (id) => {
+  presenterId = id;
+});
+supervisorPeer.on("open", (id) => {
+  supervisorId = id;
+});
+
+/* ####### Data structures ####### */
+
+// Dictionary of participants' names.
+// participantDict: { user1ID: user1Name, user2ID: user2Name, ... }
+const participantDict = {};
+// Dictionary of audiences' (those receiving your stream) call objects.
+// audiences: { user1ID: call1, user2ID: call2, ... }
+const audiences = {};
+// Dictionary of observees' (those being watched by you) call objects.
+// observees: { user1ID: call1, user2ID: call2, ... }
+const observees = {};
+
+/* ####### socket.io data ####### */
+
+// The name of this user.
+let myName = prompt("Enter your name", "anonymous");
+
+// Whether the presenter is ready to make/accept calls.
+let isReady = false;
+
+// Now you are possible to identify participants: You are ready.
+socket.on("get-ready", (participants) => {
+  for (let part of participants) {
+    participantDict[part.userId] = part.name;
+  }
+  isReady = true;
+
+  // Notify that data is synchronized, and you are ready to go.
+  socket.emit("presenter-ready", ROOM_ID, presenterId, supervisorId, myName);
+});
+
+// Error cases: Not authorized or presenter already exists.
+socket.on("rejected", (msg) => {
+  alert(msg);
+  location.href = `../${ROOM_ID}`;  // redirect to room joining page.
 });
 
 const myVideo = document.createElement("video");
 myVideo.muted = true;
-
-// List of the participants who are receiving your video streams.
-const audiences = {};
-
-// List of the participants who are sending their video streams.
-// This is only necessary if the presenter also serves as a supervisor.
-const observees = {};
 
 navigator.mediaDevices
   .getUserMedia({
@@ -33,11 +72,35 @@ navigator.mediaDevices
     audio: true,
   })
   .then((stream) => {
-    addVideoStream(myVideo, stream, myID);
+    addVideoStream(myVideo, stream, presenterId);
 
-    // Call from a participant to be 'supervised'.
-    myPeer.on("call", (call) => {
-      call.answer(); // You will be just watching the video.
+    /* ####### Peer Call establishments ####### */
+
+    // Call from a participant to the PRESENTER (audio only)
+    presenterPeer.on("call", (call) => {
+      // Reject the call if you cannot identify the caller.
+      if (participantDict[call.peer] === undefined) {
+        call.close();
+        return;
+      }
+
+      call.answer(stream); // Give your stream.
+      const audio = document.createElement("audio");
+
+      call.on("stream", (userAudioStream) => {
+        addAudioStream(audio, userAudioStream, call.peer);
+      });
+
+      call.on("close", () => {
+        audio.remove();
+      });
+
+      audiences[call.peer] = call;
+    });
+
+    // Call from a participant to the SUPERVISOR (video only)
+    supervisorPeer.on("call", (call) => {
+      call.answer(); // NO stream.
       const video = document.createElement("video");
 
       call.on("stream", (userVideoStream) => {
@@ -51,19 +114,15 @@ navigator.mediaDevices
       observees[call.peer] = call;
     });
 
+    /* ####### Socket event handling ####### */
+
     // When a new participant has joined a room.
-    socket.on("participant-joined", (userId) => {
-      console.log(`Participant joined: ${userId}`);
+    socket.on("participant-joined", (userId, name) => {
+      console.log(`Participant joined: ${userId}, ${name}`);
 
-      // Call the participant to provide your stream.
-      callParticipant(userId, stream);
-    });
-
-    // When this presenter has re-entered to the room,
-    // the server will make you to call those participants
-    // who were already in the room.
-    socket.on("call-to", (peers) => {
-      for (let userId of peers) {
+      participantDict[userId] = name;
+      if (isReady) {
+        // Call the participant only if him/her can identify you.
         callParticipant(userId, stream);
       }
     });
@@ -80,12 +139,14 @@ navigator.mediaDevices
         observees[userId].close();
         delete observees[userId];
       }
+
+      if (participantDict[userId]) {
+        delete participantDict[userId];
+      }
     });
 
-    // Let the server know that a presenter has joined.
-    myUserIdPromise.then((id) => {
-      socket.emit("presenter-joined", ROOM_ID, id);
-    });
+    // Notify the server that you want to join the room.
+    socket.emit("presenter-connected", ROOM_ID);
   });
 
 function addVideoStream(video, stream, video_id) {
@@ -97,8 +158,18 @@ function addVideoStream(video, stream, video_id) {
   videoGrid.append(video);
 }
 
+function addAudioStream(audio, stream, audio_id) {
+  audio.srcObject = stream;
+  audio.addEventListener("loadedmetadata", () => {
+    audio.play();
+  });
+  audio.setAttribute("id", audio_id);
+  audio.setAttribute("controls", "controls");
+  audioGrid.append(audio);
+}
+
 // Get concentrate data from participant and change border color of their video.
-myPeer.on("connection", function (conn) {
+supervisorPeer.on("connection", function (conn) {
   conn.on("data", function (data) {
     let video_id = data[0];
     let t = data[1];
@@ -114,20 +185,17 @@ myPeer.on("connection", function (conn) {
   });
 });
 
-// Call a participant to provide the presenter's stream.
-// The callee will answer this call with no stream (or with audio stream),
-// thus one-way (presenter => participant) call will be established.
+// Call a new participant. The participant will answer with audio stream.
 function callParticipant(userId, stream) {
-  const call = myPeer.call(userId, stream);
+  const call = presenterPeer.call(userId, stream);
+  const audio = document.createElement("audio");
 
-  // TODO: it isn't sure if this will work. The callee
-  // will answer this call with no stream.
-  call.on("stream", (userVideoStream) => {
-    console.log(`Stream from ${userId} coming in.`);
+  call.on("stream", (userAudioStream) => {
+    addAudioStream(audio, stream, userId);
   });
 
   call.on("close", () => {
-    console.log(`Participant closed: ${userId}`);
+    audio.remove();
   });
 
   audiences[userId] = call;
@@ -139,7 +207,7 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", input.value);
+    socket.emit("message", input.value, ROOM_ID);
     console.log("listener: " + input.value);
     input.value = "";
   }
@@ -233,3 +301,18 @@ draw_chart = function (value) {
 };
 
 draw_chart(null);
+
+function createLabeledVideoElement() {
+  let div = document.createElement("div");
+  let video = document.createElement("video");
+  let label = document.createElement("label");
+
+  div.append(video);
+  div.append(label);
+
+  return {
+    div: div,
+    video: video,
+    label: label,
+  };
+}

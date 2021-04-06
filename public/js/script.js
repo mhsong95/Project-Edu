@@ -1,66 +1,144 @@
 const socket = io("/");
 const videoGrid = document.getElementById("video-grid");
+
+/* ####### Peer setup ####### */
+
 const myPeer = new Peer(undefined, {
   host: "/",
   port: "8080",
 });
 
-var userID = "";
+// Resolve Peer ID.
+let userID = "";
+myPeer.on("open", (id) => {
+  userID = id;
+  console.log("UserID is " + userID);
+});
 
-// The value of this promise is used to broadcast that you've joined the room.
-// Broadcasting occurs when getUserMedia completes, thus all event listeners
-// (e.g. myPeer.on('call')) have had set.
-const myUserIdPromise = new Promise((resolve) => {
-  myPeer.on("open", (id) => {
-    resolve(id); // My user ID
-    userID = id;
-    console.log("UserID is " + userID);
-  });
+/* ####### Data structures ####### */
+
+let presenterId = ""; // The ID of the presenter of the room.
+let presenterName = ""; // The name of the presenter.
+let supervisors = []; // The supervisors of the room.
+let participantDict = {}; // Dictionary of participant names.
+
+let presenter, supervisor;
+let conn;
+
+/* ####### socket.io data ####### */
+
+// Name of the participant.
+let myName = prompt("Enter your name", "anonymous");
+
+// Whether the participant is ready to make/accept calls.
+let isReady = false;
+
+socket.on("get-ready", (pres, sups, parts) => {
+  presenterId = pres.userId;
+  presenterName = pres.name;
+  supervisors = supervisors.concat(sups);
+
+  for (let part of parts) {
+    participantDict[part.userId] = part.name;
+  }
+  isReady = true;
+
+  // Notify the server that you're ready.
+  socket.emit("participant-ready", ROOM_ID, userID, myName);
+});
+
+// Error cases: room not found. redirect to room creation page.
+socket.on("rejected", (msg) => {
+  alert(msg);
+  location.href = "../create";
+});
+
+socket.on("participant-joined", (userId, name) => {
+  participantDict[userId] = name;
+});
+
+socket.on("supervisor-joined", (userId) => {
+  supervisors.push(userId);
 });
 
 const myVideo = document.createElement("video");
 myVideo.muted = true;
 
-let presenter, supervisor;
-let conn;
+Promise.all([
+  // Add your own video & audio stream.
+  navigator.mediaDevices
+    .getUserMedia({
+      video: true,
+      audio: true,
+    })
+    .then((stream) => {
+      addVideoStream(myVideo, stream);
+    }),
+  // Only video stream: calls to supervisors will be made.
+  navigator.mediaDevices
+    .getUserMedia({
+      video: true,
+    })
+    .then((stream) => {
+      // The server tells you to connect to a new supervisor.
+      socket.on("call-supervisor", (userId) => {
+        callSupervisor(userId, stream);
+      });
+    }),
+  // Only audio stream: calls from/to presenter will be made.
+  navigator.mediaDevices
+    .getUserMedia({
+      audio: true,
+    })
+    .then((stream) => {
+      socket.on("presenter-joined", (userId, name) => {
+        console.log(`Presenter joined: ${userId}`);
+        presenterId = userId;
+        presenterName = name;
 
-// A call from the presenter
-myPeer.on("call", (call) => {
-  call.answer(); // You just watch the presenter.
-  const video = document.createElement("video");
+        // Make call to the presenter if you're ready.
+        if (ready) {
+          callPresenter(userId, stream);
+        }
+      });
 
-  call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream);
-  });
+      socket.on("presenter-leaved", () => {
+        presenterId = "";
+        presenterName = "";
 
-  call.on("close", () => {
-    video.remove();
-  });
+        if (presenter) {
+          presenter.close();
+        }
+      })
 
-  if (presenter) {
-    presenter.close();
-  }
-  presenter = call;
-  conn = call.peer;
+      // A call from the presenter
+      myPeer.on("call", (call) => {
+        // Reject the call if you cannot identify the presenter.
+        if (presenterId !== call.peer) {
+          call.close();
+          return;
+        }
+
+        call.answer(stream); // Answer with your audio stream.
+        const video = document.createElement("video");
+
+        call.on("stream", (userVideoStream) => {
+          addVideoStream(video, userVideoStream);
+        });
+
+        call.on("close", () => {
+          video.remove();
+        });
+
+        if (presenter) {
+          presenter.close();
+        }
+        presenter = call;
+      });
+    }),
+]).then(() => {
+  socket.emit("participant-connected", ROOM_ID);
 });
-
-navigator.mediaDevices
-  .getUserMedia({
-    video: true,
-    audio: true,
-  })
-  .then((stream) => {
-    addVideoStream(myVideo, stream);
-
-    // The server tells you to connect to a new supervisor.
-    socket.on("call-to", (userId) => {
-      callSupervisor(userId, stream);
-    });
-
-    myUserIdPromise.then((id) => {
-      socket.emit("participant-joined", ROOM_ID, id);
-    });
-  });
 
 function addVideoStream(video, stream) {
   video.srcObject = stream;
@@ -84,6 +162,8 @@ function callSupervisor(userId, stream) {
 
   call.on("close", () => {
     console.log(`Supervisor closed: ${userId}`);
+    supervisor = null;
+    conn = "";
   });
 
   if (supervisor) {
@@ -91,6 +171,30 @@ function callSupervisor(userId, stream) {
   }
   supervisor = call;
   conn = userId;
+
+  // Identify the callee as a supervisor.
+  if (!(userId in supervisors)) {
+    supervisors.push(userId);
+  }
+}
+
+// Call a presenter.
+function callPresenter(userId, stream) {
+  const call = myPeer.call(userId, stream);
+  const video = document.createElement("video");
+
+  call.on("stream", (userVideoStream) => {
+    addVideoStream(video, stream);
+  });
+
+  call.on("close", () => {
+    video.remove();
+  });
+
+  if (presenter) {
+    presenter.close();
+  }
+  presenter = call;
 }
 
 // chat
@@ -99,7 +203,7 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", input.value);
+    socket.emit("message", input.value, ROOM_ID);
     console.log("listener: " + input.value);
     input.value = "";
   }
@@ -136,7 +240,7 @@ function send_data(data) {
   });
 
   // Send data to server
-  socket.emit("concent_data", data);
+  socket.emit("concent_data", ROOM_ID, data);
 }
 
 webgazer

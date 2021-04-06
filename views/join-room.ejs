@@ -13,7 +13,7 @@
 	<div class="enter-passcode-form">
 		<h1>Join Room</h1>
 		<form method="POST">
-			<input type="text" name="roomId" id="roomId" value="<%= roomId %>" readonly />
+			<input type="text" name="room_name" id="room_name" value="<%= room_name %>" readonly />
 			<div id="passcode-fields" style="display:none">
 				<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" required />
 				<input type="submit" value="Join as a supervisor" />
@@ -38,12 +38,12 @@
 			passcodeFields.style.display = "none";
 			joinButtons.style.display = "";
 		}
-
-		const joinFailed = <%= joinFailed %>;
-		if (joinFailed) {
-			alert("Wrong passcode!");
-		}
 	</script>
+	<% if (error) { %>
+		<!-- Alert the error message if joining failed (due to wrong passcode) -->
+		<script>alert("<%= error.msg %>")</script>
+	<% } %>
+
 </body>
 
 </html>

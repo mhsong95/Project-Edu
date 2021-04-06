@@ -5,16 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      const ROOM_ID = "<%= roomId %>";
+      const ROOM_ID = "<%= room_id %>";
     </script>
-    <script
-      src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"
-      defer
-    ></script>
+    <script 
+      src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js" 
+      defer>
+    </script>
     <script src="/socket.io/socket.io.js" defer></script>
     <script src="https://webgazer.cs.brown.edu/webgazer.js?" defer></script>
     <script src="/js/script.js" defer></script>
-    <title>Participant</title>
+    <title>Participant@<%= room_name %></title>
     <style>
       #video-grid {
         display: grid;
