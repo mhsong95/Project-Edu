@@ -48,7 +48,7 @@ class Room {
   }
 
   getParticipant(userId) {
-    for (let part of participants) {
+    for (let part of this.participants) {
       if (part.userId === userId) {
         return part;
       }
