@@ -13,19 +13,19 @@
 	<div class="enter-passcode-form">
 		<h1>Create New Room</h1>
 		<form method="POST">
-			<input type="text" name="roomId" id="roomId" value="<%= roomId %>" readonly />
-			<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" required />
+			<label for="room_name">Room name </label>
+			<input type="text" name="room_name" id="room_name" placeholder="ROOM NAME" value="<%= room_name %>" required />
+			<label for="passcode">Passcode</label>
+			<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" value="<%= passcode %>" required />
 			<input type="submit" value="CREATE" />
 			<p>You can join the room as a <b>supervisor</b> using this passcode.</p>
 		</form>
 	</div>
+	<% if (error) { %>
+		<!-- Alert the error message if the fields are not valid. -->
+		<script>alert("<%= error.msg %>")</script>
+	<% } %>
 
-	<script>
-		const creationFailed = <%= creationFailed %>;
-		if (creationFailed) {
-			alert("Oops! The room already exists or you did not enter the passcode.");
-		}
-	</script>
 </body>
 
 </html>
