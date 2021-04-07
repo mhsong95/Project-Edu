@@ -104,10 +104,12 @@
       }
     </style>
   </head>
-
   <body>
     <video id="screen-video"></video>
-    <button onclick="alert(`${window.location.origin}/room/${ROOM_ID}`)">
+    <button
+      id="invite"
+      onclick="alert(`${window.location.origin}/room/${ROOM_ID}`)"
+    >
       Invite
     </button>
 

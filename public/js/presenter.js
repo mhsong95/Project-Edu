@@ -14,9 +14,14 @@ const supervisorPeer = new Peer(undefined, {
   host: "/",
   port: "8080",
 });
+const screenPeer = new Peer(undefined, {
+  host: "/",
+  port: "8080",
+});
 
 let presenterId = ""; // ID as a presenter.
 let supervisorId = ""; // ID as a supervisor.
+var screenID = "";
 
 // Resolve IDs.
 presenterPeer.on("open", (id) => {
@@ -24,6 +29,9 @@ presenterPeer.on("open", (id) => {
 });
 supervisorPeer.on("open", (id) => {
   supervisorId = id;
+});
+screenPeer.on("open", (id) => {
+  screenID = id;
 });
 
 const screen_vid = document.getElementById("screen-video");
@@ -38,25 +46,16 @@ const audiences = {};
 // Dictionary of observees' (those being watched by you) call objects.
 // observees: { user1ID: call1, user2ID: call2, ... }
 const observees = {};
+
 navigator.mediaDevices.getDisplayMedia().then((stream) => {
   screen_vid.srcObject = stream;
   screen_vid.addEventListener("loadedmetadata", () => {
     screen_vid.play();
   });
+
   socket.on("participant-joined", (userId) => {
-    console.log(`Participant joined: ${userId}`);
-
     // Call the participant to provide your stream.
-    callParticipant(userId, stream, true);
-  });
-
-  // When this presenter has re-entered to the room,
-  // the server will make you to call those participants
-  // who were already in the room.
-  socket.on("call-to", (peers) => {
-    for (let userId of peers) {
-      callParticipant(userId, stream, true);
-    }
+    screenPeer.call(userId, stream, { metadata: { scn: true } });
   });
 });
 
@@ -209,7 +208,9 @@ supervisorPeer.on("connection", function (conn) {
 
 // Call a new participant. The participant will answer with audio stream.
 function callParticipant(userId, stream, screen) {
-  const call = presenterPeer.call(userId, stream, [screen]);
+  const call = presenterPeer.call(userId, stream, {
+    metadata: { scn: screen },
+  });
   const audio = document.createElement("audio");
 
   call.on("stream", (userAudioStream) => {
@@ -323,18 +324,3 @@ draw_chart = function (value) {
 };
 
 draw_chart(null);
-
-function createLabeledVideoElement() {
-  let div = document.createElement("div");
-  let video = document.createElement("video");
-  let label = document.createElement("label");
-
-  div.append(video);
-  div.append(label);
-
-  return {
-    div: div,
-    video: video,
-    label: label,
-  };
-}

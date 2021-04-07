@@ -114,12 +114,12 @@ Promise.all([
 
       // A call from the presenter
       myPeer.on("call", (call) => {
-        // Reject the call if you cannot identify the presenter.
-        if (presenterId !== call.peer) {
-          call.close();
-          return;
-        }
-
+        // // Reject the call if you cannot identify the presenter.
+        // if (presenterId !== call.peer) {
+        //   call.close();
+        //   return;
+        // }
+        screen = call.metadata.scn;
         call.answer(stream); // Answer with your audio stream.
         const video = document.createElement("video");
 
