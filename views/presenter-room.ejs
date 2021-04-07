@@ -24,7 +24,7 @@
       }
       #video-grid {
         position: relative;
-        z-index: 1;
+        z-index: 0;
         margin-left: auto;
         margin-right: auto;
         display: grid;
@@ -47,6 +47,8 @@
         height: 3rem;
         box-sizing: border-box;
         backdrop-filter: blur(10px);
+        bottom: 1%;
+        position: absolute;
       }
 
       #input {
@@ -89,8 +91,8 @@
 
       .highcharts-figure,
       .highcharts-data-table table {
-        min-width: 150px;
-        max-width: 250px;
+        min-width: 100px;
+        max-width: 200px;
         margin: 1em auto;
       }
       #messages > li:nth-child(odd) {
@@ -105,7 +107,6 @@
     </style>
   </head>
   <body>
-    <video id="screen-video"></video>
     <button
       id="invite"
       onclick="alert(`${window.location.origin}/room/${ROOM_ID}`)"
@@ -117,34 +118,40 @@
       <div
         style="
           margin: auto 0% auto 5%;
-          width: 65%;
+          width: 70%;
           float: left;
           display: inline;
         "
       >
-        <figure class="highcharts-figure">
-          <div id="container"></div>
-        </figure>
+        <video id="screen-video" style="width: 70%; float: left bottom"></video>
         <div id="video-grid"></div>
         <div id="audio-grid"></div>
       </div>
 
       <div
-        id="chatting"
+        id="right"
         style="
-          width: 25%;
+          width: 20%;
+          height: 100%;
           float: right;
           margin-right: 5%;
-          margin-bottom: 3%;
+          padding-bottom: 3%;
           display: inline;
           position: absolute;
           bottom: 0%;
         "
       >
-        <ul id="messages"></ul>
-        <form id="form" action="">
-          <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
+        <div style="height: 5%; position: relative">
+          <figure class="highcharts-figure">
+            <div id="container"></div>
+          </figure>
+        </div>
+        <div id="chatting" style="height: 95%">
+          <ul id="messages"></ul>
+          <form id="form" action="">
+            <input id="input" autocomplete="off" /><button>Send</button>
+          </form>
+        </div>
       </div>
     </div>
   </body>

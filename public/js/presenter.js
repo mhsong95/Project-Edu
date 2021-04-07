@@ -287,6 +287,7 @@ draw_chart = function (value) {
       plotShadow: false,
       type: "pie",
       animation: false,
+      backgroundColor: null,
     },
     title: {
       text: null,
