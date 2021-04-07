@@ -1,2 +1,2 @@
 npm run devStart
-peerjs --port 8080
+peerjs --sslkey fake-keys/private.pem --sslcert fake-keys/private.crt --port 8080

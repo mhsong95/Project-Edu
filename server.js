@@ -4,8 +4,18 @@ const createError = require("http-errors");
 const logger = require("morgan");
 const path = require("path");
 
+// HTTPS bypassing (Use only for DEVELOPMENT!!)
+const fs = require("fs");
+const options = {
+  key: fs.readFileSync("fake-keys/private.pem"),
+  cert: fs.readFileSync("fake-keys/private.crt"),
+  ca: fs.readFileSync("fake-keys/rootCA.pem"),
+  requestCert: false,
+  rejectUnauthorized: false,
+};
+
 const app = express(); // Express server
-const server = require("http").createServer(app); // HTTP server
+const server = require("https").createServer(options, app); // HTTP server
 const io = new (require("socket.io").Server)(server); // socket.io server
 
 // Require routers
