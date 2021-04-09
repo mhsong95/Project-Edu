@@ -4,7 +4,7 @@
 const { Server, Socket } = require("socket.io");
 
 // Require database and models for Room and Supervisor.
-const { rooms, avgDict, concentDict } = require("../db");
+const rooms = require("../db");
 const { Supervisor, Room } = require("../models/room");
 
 // Helper functions
