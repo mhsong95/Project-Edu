@@ -209,14 +209,16 @@ supervisorPeer.on("connection", function (conn) {
 
 // Call a new participant. The participant will answer with audio stream.
 function callParticipant(userId, stream, screen) {
-  const call = presenterPeer.call(userId, stream, {
+  let peer = screen ? screenPeer : presenterPeer;
+
+  const call = peer.call(userId, stream, {
     metadata: { scn: screen },
   });
   const audio = document.createElement("audio");
 
   if (!screen) {
     call.on("stream", (userAudioStream) => {
-      addAudioStream(audio, stream, userId);
+      addAudioStream(audio, userAudioStream, userId);
     });
 
     call.on("close", () => {

@@ -119,36 +119,40 @@ Promise.all([
         //   call.close();
         //   return;
         // }
-        screen = call.metadata.scn;
+        let screen = call.metadata.scn;
+        console.log(`Call from ${call.peer}: ${screen}`);
 
-        /*
         if (screen) {
-          emptyStream = new MediaStream();
-          call.answer(emptyStream);
-
+          call.answer();
+        } else {
+          call.answer(stream);
         }
-        */
-        call.answer(stream); // Answer with your audio stream.
+
         const video = document.createElement("video");
 
         call.on("stream", (userVideoStream) => {
-          console.log(screen);
+          console.log(`Stream from ${call.peer}: ${screen}`);
           if (screen) {
             addVideoStream(screen_vid, userVideoStream, screen);
-            video.remove();
           } else {
             addVideoStream(video, userVideoStream, screen);
           }
         });
 
         call.on("close", () => {
-          video.remove();
+          if (!screen) {
+            video.remove();
+          } else {
+            screen_vid.srcObject = null;
+          }
         });
 
-        if (presenter) {
-          presenter.close();
+        if (!screen) {
+          if (presenter) {
+            presenter.close();
+          }
+          presenter = call;
         }
-        presenter = call;
       });
     }),
 ]).then(() => {
