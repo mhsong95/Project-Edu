@@ -120,10 +120,18 @@ Promise.all([
         //   return;
         // }
         screen = call.metadata.scn;
+
+        /*
+        if (screen) {
+          emptyStream = new MediaStream();
+          call.answer(emptyStream);
+
+        }
+        */
         call.answer(stream); // Answer with your audio stream.
         const video = document.createElement("video");
 
-        call.on("stream", (userVideoStream, screen) => {
+        call.on("stream", (userVideoStream) => {
           console.log(screen);
           if (screen) {
             addVideoStream(screen_vid, userVideoStream, screen);
