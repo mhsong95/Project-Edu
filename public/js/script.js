@@ -4,6 +4,9 @@ const videoGrid = document.getElementById("video-grid");
 /* ####### Peer setup ####### */
 
 const screen_vid = document.getElementById("screen-video");
+const my_cam = document.getElementById("my-cam");
+const prof_cam = document.getElementById("prof-cam");
+
 const myPeer = new Peer(undefined, {
   host: "/",
   port: "8080",
@@ -80,8 +83,9 @@ socket.on("supervisor-joined", (userId) => {
   supervisors.push(userId);
 });
 
-const myVideo = document.createElement("video");
-myVideo.muted = true;
+//const myVideo = document.createElement("video");
+//myVideo.muted = true;
+my_cam.muted = true;
 
 Promise.all([
   // Add your own video & audio stream.
@@ -91,7 +95,7 @@ Promise.all([
       audio: true,
     })
     .then((stream) => {
-      addVideoStream(myVideo, stream, false);
+      addVideoStream(my_cam, stream, false);
     }),
   // Only video stream: calls to supervisors will be made.
   navigator.mediaDevices
@@ -155,13 +159,12 @@ Promise.all([
           // Call from the presenter's webcam.
           call.answer(stream);
 
-          const video = document.createElement("video");
           call.on("stream", (userVideoStream) => {
-            addVideoStream(video, userVideoStream, false);
+            addVideoStream(prof_cam, userVideoStream, false);
           });
 
           call.on("close", () => {
-            video.remove();
+            prof_cam.srcObject = new MediaStream();
           });
 
           if (presenter) {
@@ -195,16 +198,14 @@ Promise.all([
   socket.emit("participant-connected", ROOM_ID);
 });
 
-function addVideoStream(video, stream, screen) {
+function addVideoStream(video, stream) {
   video.srcObject = stream;
-  console.log(video);
-  console.log(stream);
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
-  if (!screen) {
-    videoGrid.append(video);
-  }
+  //if (!screen) {
+  //  videoGrid.append(video);
+  //}
 }
 
 // Call a supervisor to provide the participant's stream.
@@ -240,14 +241,14 @@ function callSupervisor(userId, stream) {
 // Call a presenter.
 function callPresenter(userId, stream) {
   const call = myPeer.call(userId, stream);
-  const video = document.createElement("video");
+  //const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream, false);
+    addVideoStream(prof_cam, stream);
   });
 
   call.on("close", () => {
-    video.remove();
+    prof_cam.srcObject = new MediaStream();
   });
 
   if (presenter) {
@@ -297,13 +298,6 @@ socket.on("message1", function (msg, name) {
 
 // webgazer
 // store calibration
-window.saveDataAcrossSessions = true;
-
-const LOOK_DELAY = 3000; // 3 second
-
-let startLookTime = Number.POSITIVE_INFINITY;
-let lookDirection = null;
-
 function add_concentrate_log(t, level) {
   send_data([userID, t, level]);
 }
@@ -319,50 +313,3 @@ function send_data(data) {
   // Send data to server
   socket.emit("concent_data", ROOM_ID, data);
 }
-
-webgazer
-  .setGazeListener((data, timestamp) => {
-    // console.log(data, timestamp);
-    const videogrid = document.getElementById("video-grid");
-    const left = videogrid.offsetLeft;
-    const right = videogrid.offsetLeft + videogrid.offsetWidth;
-    const top = videogrid.offsetTop;
-    const bottom = videogrid.offsetTop + videogrid.offsetHeight;
-
-    if (data == null || lookDirection === "STOP") return;
-
-    if (
-      data.x >= left &&
-      data.x <= right &&
-      data.y >= top &&
-      data.y <= bottom
-    ) {
-      // videogrid.style.backgroundColor = "blue";
-      if (lookDirection !== null) {
-        add_concentrate_log(timestamp, 10);
-      }
-      startLookTime = Number.POSITIVE_INFINITY; // restart timer
-      lookDirection = null;
-    } else if (lookDirection !== "RESET" && lookDirection === null) {
-      // videogrid.style.backgroundColor = "yellow";
-      startLookTime = timestamp;
-      lookDirection = "OUT";
-      add_concentrate_log(timestamp, 5);
-    }
-
-    if (startLookTime + LOOK_DELAY < timestamp) {
-      console.log(left, right, top, bottom);
-      // videogrid.style.backgroundColor = "red";
-      add_concentrate_log(timestamp, 0);
-
-      startLookTime = Number.POSITIVE_INFINITY;
-      lookDirection = "STOP";
-      setTimeout(() => {
-        lookDirection = "RESET";
-      }, 200);
-    }
-  })
-  .begin();
-
-// uncomment to hide videopreview and predictionpoints of webgazer
-// webgazer.showVideoPreview(false).showPredictionPoints(false);

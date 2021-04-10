@@ -16,25 +16,46 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
     <title>Participant@<%= room_name %></title>
     <style>
+      #skip{
+        margin-top: 15%;
+      }
       #screen-video{
+        top: 1%;
+        left: 0.5%;
         position: absolute;
         z-index: 0;
+        height: 90%;
+        width: 80%;
+        background-color: black;
         object-fit: contain;
       }
-          
-      #video-grid {
-        position: relative;
-        z-index: 1;
-        margin-left: 30%;
-        margin-right: auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, 150px);
-        grid-auto-rows: 150px;
+
+      #my-cam{
+        top: 1%;
+        right: 0%;
+        position: absolute;
+        height: 20%;
+        width: 20%;
+        object-fit: contain;
       }
-      video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+
+      #prof-cam{
+        top: 21%;
+        right: 0%;
+        position: absolute;
+        height: 20%;
+        width: 20%;
+        object-fit: contain;
+      }
+
+      #chatting{
+        width: 18%;
+        float: right;
+        right: 0.5%;
+        bottom: 1%;
+        display: inline;
+        position: absolute;
+        border-radius: 10px;
       }
 
       /* chat style */
@@ -47,6 +68,7 @@
 
       #form {
         background: rgba(0, 0, 0, 0.15);
+        border-radius: 30px;
         padding: 0.25rem;
         display: flex;
         height: 3rem;
@@ -73,6 +95,7 @@
         margin: 0.25rem;
         border-radius: 3px;
         outline: none;
+        border-radius: 30px;
         color: #fff;
       }
 
@@ -143,39 +166,21 @@
       </style>
   </head>
   <body>
-    <canvas id="plotting_canvas" width="500" height="500" style="cursor:crosshair;"></canvas>
-    <video id="screen-video"></video>
-    <div style="width: 100%">
-      <div
-        style="
-          margin: auto 0% auto 5%;
-          width: 65%;
-          float: left;
-          display: inline;
-        "
-      >
-        <div id="video-grid"></div>
-      </div>
-
-      <div
-        id="chatting"
-        style="
-          width: 25%;
-          float: right;
-          margin-right: 5%;
-          margin-bottom: 3%;
-          display: inline;
-          position: absolute;
-          bottom: 0%;
-        "
-      >
-        <ul id="messages"></ul>
-        <form id="form" action="">
-          <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
+    <div id="main">
+      <video id="screen-video"></video>
+      <video id="my-cam"></video>
+      <video id="prof-cam"></video>
+      <div style="width: 100%">
+        <div id="chatting">
+          <ul id="messages"></ul>
+          <form id="form" action="">
+            <input id="input" autocomplete="off" placeholder="Type messages"/><button>Send</button>
+          </form>
+        </div>
       </div>
     </div>
     <div id="calib">
+      <button id="skip" onclick="skip()">Skip</button>>
       <div class="calibrationDiv">
         <input type="button" class="Calibration" id="Pt1"></input>
         <input type="button" class="Calibration" id="Pt2"></input>

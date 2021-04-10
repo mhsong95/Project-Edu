@@ -7,7 +7,6 @@ var CalibrationPoints={};
 function ClearCanvas(){
   $(".Calibration").hide();
   var canvas = document.getElementById("plotting_canvas");
-  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /**
@@ -79,10 +78,19 @@ $(document).ready(function(){
       if (PointCalibrate >= 9){ // last point is calibrated
         //using jquery to grab every element in Calibration class and hide them except the middle point.
         $("#calib").hide();
+        $("#webgazerVideoContainer").hide();
         $("#main").show();
+        webgazer.showPredictionPoints(false);
       }
     });
 });
+
+function skip(){
+  $("#calib").hide();
+  $("#webgazerVideoContainer").hide();
+  $("#main").show();
+  webgazer.showPredictionPoints(false);
+}
 
 window.onload = async function() {
 
@@ -92,10 +100,17 @@ window.onload = async function() {
 
   webgazer.params.showVideoPreview = true;
   //start the webgazer tracker
+  window.saveDataAcrossSessions = true;
+
+  const LOOK_DELAY = 3000; // 3 second
+
+  let startLookTime = Number.POSITIVE_INFINITY;
+  let lookDirection = null;
+
   await webgazer.setRegression('ridge') /* currently must set regression and tracker */
       //.setTracker('clmtrackr')
       .setGazeListener(function(data, timestamp) {
-        //   console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
+       console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
         //   console.log(clock); /* elapsed time in milliseconds since webgazer.begin() was called */
         const videogrid = document.getElementById("video-grid");
         const left = videogrid.offsetLeft;
@@ -134,9 +149,6 @@ window.onload = async function() {
           }, 200);
         }
       }).begin();
-      webgazer.showVideoPreview(true) /* shows all video previews */
-          .showPredictionPoints(true) /* shows a square every 100 milliseconds where current prediction is */
-          .applyKalmanFilter(true); /* Kalman Filter defaults to on. Can be toggled by user. */
 
   //Set up the webgazer video feedback.
   var setup = function() {
