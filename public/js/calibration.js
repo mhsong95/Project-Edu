@@ -112,7 +112,7 @@ window.onload = async function() {
       .setGazeListener(function(data, timestamp) {
        console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
         //   console.log(clock); /* elapsed time in milliseconds since webgazer.begin() was called */
-        const videogrid = document.getElementById("video-grid");
+        const videogrid = document.getElementById("screen-video");
         const left = videogrid.offsetLeft;
         const right = videogrid.offsetLeft + videogrid.offsetWidth;
         const top = videogrid.offsetTop;
@@ -149,18 +149,6 @@ window.onload = async function() {
           }, 200);
         }
       }).begin();
-
-  //Set up the webgazer video feedback.
-  var setup = function() {
-
-      //Set up the main canvas. The main canvas is used to calibrate the webgazer.
-      var canvas = document.getElementById("plotting_canvas");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      canvas.style.position = 'fixed';
-  };
-  setup();
-
 };
 
 // Set to true if you want to save the data even if you reload the page.
