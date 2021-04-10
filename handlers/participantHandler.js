@@ -49,7 +49,10 @@ const participantConnected = (socket, roomId) => {
 
   let presenter = null;
   if (room.presenter) {
-    presenter = { userId: room.presenter.userId, name: room.presenter.name };
+    presenter = { 
+      userId: room.presenter.userId, 
+      screenId: room.presenter.screenId,
+      name: room.presenter.name };
   }
   let supervisors = room.supervisors.map((sup) => sup.userId);
   let participants = room.participants.map((part) => {

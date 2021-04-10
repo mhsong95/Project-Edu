@@ -19,12 +19,29 @@ myPeer.on("open", (id) => {
 /* ####### Data structures ####### */
 
 let presenterId = ""; // The ID of the presenter of the room.
+let screenId = ""; // The ID of the presenter's screen.
 let presenterName = ""; // The name of the presenter.
 let supervisors = []; // The supervisors of the room.
 let participantDict = {}; // Dictionary of participant names.
 
-let presenter, supervisor;
+let presenter, supervisor, screen;
 let conn;
+
+// An empty media stream.
+let emptyStream = new MediaStream([
+  (function ({ width, height }) {
+    const canvas = Object.assign(document.createElement("canvas"), {
+      width,
+      height,
+    });
+    canvas.getContext("2d").fillRect(0, 0, width, height);
+
+    const stream = canvas.captureStream();
+    const track = stream.getVideoTracks()[0];
+
+    return Object.assign(track, { enabled: false });
+  })({ width: 10, height: 10 }),
+]);
 
 /* ####### socket.io data ####### */
 
@@ -36,6 +53,7 @@ let isReady = false;
 
 socket.on("get-ready", (pres, sups, parts) => {
   presenterId = pres.userId;
+  screenId = pres.screenId;
   presenterName = pres.name;
   supervisors = supervisors.concat(sups);
 
@@ -98,7 +116,7 @@ Promise.all([
         presenterName = name;
 
         // Make call to the presenter if you're ready.
-        if (ready) {
+        if (isReady) {
           callPresenter(userId, stream);
         }
       });
@@ -109,49 +127,67 @@ Promise.all([
 
         if (presenter) {
           presenter.close();
+          presenter = null;
+        }
+      });
+
+      socket.on("screenshare-started", (userId) => {
+        screenId = userId;
+
+        // Make call to the screen peer if you're ready.
+        if (isReady) {
+          callScreen(userId);
+        }
+      });
+
+      socket.on("screenshare-stopped", () => {
+        screenId = "";
+
+        if (screen) {
+          screen.close();
+          screen = null;
         }
       });
 
       // A call from the presenter
       myPeer.on("call", (call) => {
-        // // Reject the call if you cannot identify the presenter.
-        // if (presenterId !== call.peer) {
-        //   call.close();
-        //   return;
-        // }
-        let screen = call.metadata.scn;
-        console.log(`Call from ${call.peer}: ${screen}`);
-
-        if (screen) {
-          call.answer();
-        } else {
+        if (call.peer === presenterId) {
+          // Call from the presenter's webcam.
           call.answer(stream);
-        }
 
-        const video = document.createElement("video");
+          const video = document.createElement("video");
+          call.on("stream", (userVideoStream) => {
+            addVideoStream(video, userVideoStream, false);
+          });
 
-        call.on("stream", (userVideoStream) => {
-          console.log(`Stream from ${call.peer}: ${screen}`);
-          if (screen) {
-            addVideoStream(screen_vid, userVideoStream, screen);
-          } else {
-            addVideoStream(video, userVideoStream, screen);
-          }
-        });
-
-        call.on("close", () => {
-          if (!screen) {
+          call.on("close", () => {
             video.remove();
-          } else {
-            screen_vid.srcObject = null;
-          }
-        });
+          });
 
-        if (!screen) {
           if (presenter) {
             presenter.close();
           }
           presenter = call;
+        } else if (call.peer === screenId) {
+          // Call from the presenter's screen.
+          call.answer();
+
+          call.on("stream", (screenStream) => {
+            addVideoStream(screen_vid, screenStream, true);
+          });
+
+          call.on("close", () => {
+            screen_vid.srcObject = new MediaStream();
+          });
+
+          if (screen) {
+            screen.close();
+          }
+          screen = call;
+        } else {
+          // Reject any other calls.
+          call.close();
+          return;
         }
       });
     }),
@@ -161,6 +197,8 @@ Promise.all([
 
 function addVideoStream(video, stream, screen) {
   video.srcObject = stream;
+  console.log(video);
+  console.log(stream);
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
@@ -205,7 +243,7 @@ function callPresenter(userId, stream) {
   const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(video, stream);
+    addVideoStream(video, userVideoStream, false);
   });
 
   call.on("close", () => {
@@ -216,6 +254,24 @@ function callPresenter(userId, stream) {
     presenter.close();
   }
   presenter = call;
+}
+
+// Call a screen sharing peer.
+function callScreen(userId) {
+  const call = myPeer.call(userId, emptyStream);
+
+  call.on("stream", (screenStream) => {
+    addVideoStream(screen_vid, screenStream, true);
+  });
+
+  call.on("close", () => {
+    screen_vid.srcObject = new MediaStream();
+  });
+
+  if (screen) {
+    screen.close();
+  }
+  screen = call;
 }
 
 // chat

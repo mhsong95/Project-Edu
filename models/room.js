@@ -8,6 +8,7 @@ class User {
 class Presenter extends User {
   constructor(userId, socket, name) {
     super(userId, socket);
+    this.screenId = null;
     this.name = name;
   }
 }

@@ -105,13 +105,11 @@
     </style>
   </head>
   <body>
-    <video id="screen-video"></video>
-    <button
-      id="invite"
-      onclick="alert(`${window.location.origin}/room/${ROOM_ID}`)"
-    >
+    <button id="invite" onclick="alert(`${window.location.origin}/room/${ROOM_ID}`)">
       Invite
     </button>
+    <button id="screen-share" onclick="startScreenSharing()">Share Screen</button>
+    <video id="screen-video"></video>
 
     <div style="width: 100%">
       <div
