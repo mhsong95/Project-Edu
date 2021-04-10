@@ -7,7 +7,6 @@ var CalibrationPoints={};
 function ClearCanvas(){
   $(".Calibration").hide();
   var canvas = document.getElementById("plotting_canvas");
-  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /**

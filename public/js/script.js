@@ -4,6 +4,9 @@ const videoGrid = document.getElementById("video-grid");
 /* ####### Peer setup ####### */
 
 const screen_vid = document.getElementById("screen-video");
+const my_cam = document.getElementById("my-cam");
+const prof_cam = document.getElementById("prof-cam");
+
 const myPeer = new Peer(undefined, {
   host: "/",
   port: "8080",
@@ -62,8 +65,9 @@ socket.on("supervisor-joined", (userId) => {
   supervisors.push(userId);
 });
 
-const myVideo = document.createElement("video");
-myVideo.muted = true;
+//const myVideo = document.createElement("video");
+//myVideo.muted = true;
+my_cam.muted = true;
 
 Promise.all([
   // Add your own video & audio stream.
@@ -73,7 +77,7 @@ Promise.all([
       audio: true,
     })
     .then((stream) => {
-      addVideoStream(myVideo, stream, false);
+      addVideoStream(my_cam, stream, false);
     }),
   // Only video stream: calls to supervisors will be made.
   navigator.mediaDevices
@@ -128,20 +132,21 @@ Promise.all([
           call.answer(stream);
         }
 
-        const video = document.createElement("video");
+        //const video = document.createElement("video");
 
         call.on("stream", (userVideoStream) => {
           console.log(`Stream from ${call.peer}: ${screen}`);
           if (screen) {
             addVideoStream(screen_vid, userVideoStream, screen);
           } else {
-            addVideoStream(video, userVideoStream, screen);
+            addVideoStream(prof_cam, userVideoStream, screen);
           }
         });
 
         call.on("close", () => {
           if (!screen) {
-            video.remove();
+            //video.remove();
+            prof_cam.remove();
           } else {
             screen_vid.srcObject = null;
           }
@@ -164,9 +169,9 @@ function addVideoStream(video, stream, screen) {
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
-  if (!screen) {
-    videoGrid.append(video);
-  }
+  //if (!screen) {
+  //  videoGrid.append(video);
+  //}
 }
 
 // Call a supervisor to provide the participant's stream.
@@ -202,10 +207,10 @@ function callSupervisor(userId, stream) {
 // Call a presenter.
 function callPresenter(userId, stream) {
   const call = myPeer.call(userId, stream);
-  const video = document.createElement("video");
+  //const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(video, stream);
+    addVideoStream(my_cam, stream);
   });
 
   call.on("close", () => {
