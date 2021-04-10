@@ -326,75 +326,87 @@ socket.on("update-concent", function (value) {
   draw_chart(value);
 });
 
-// Radialize the colors
-Highcharts.setOptions({
-  colors: Highcharts.map(Highcharts.getOptions().colors, function (color) {
-    return {
-      radialGradient: {
-        cx: 0.5,
-        cy: 0.3,
-        r: 0.7,
-      },
-      stops: [
-        [0, color],
-        [1, Highcharts.color(color).brighten(-0.3).get("rgb")], // darken
-      ],
-    };
-  }),
+Chart.pluginService.register({
+  beforeDraw: function (chart) {
+    var width = chart.chart.width,
+      height = chart.chart.height,
+      ctx = chart.chart.ctx;
+
+    ctx.restore();
+    var fontSize = (height / 120).toFixed(2);
+    ctx.font = fontSize + "em sans-serif";
+    ctx.textBaseline = "middle";
+
+    var text = chart.config.data.datasets[0].data[0] + "%",
+      textX = Math.round((width - ctx.measureText(text).width) / 2),
+      textY = height / 2;
+
+    ctx.fillText(text, textX, textY);
+    ctx.save();
+  },
 });
+
+var ctx = document.getElementById("myChart");
+const data = {
+  labels: ["Concentrate", "Not concentrate"],
+  datasets: [
+    {
+      label: "concentrate rates",
+      data: [0, 100],
+      backgroundColor: ["#4169E1", "#FF5675"],
+      // borderColor: ["rgba(54, 162, 235, 1)", "rgba(255, 99, 132, 1)"],
+      borderWidth: 1,
+    },
+  ],
+};
+const config = {
+  type: "doughnut",
+  data,
+  options: {
+    legend: {
+      display: false,
+      // position: "top",
+    },
+    tooltips: {
+      callbacks: {
+        label: function (tooltipItem) {
+          return tooltipItem.yLabel;
+        },
+      },
+    },
+    responsive: true,
+    plugins: {
+      title: {
+        display: false,
+        text: "Chart.js Doughnut Chart",
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  },
+};
+
+var myChart = new Chart(ctx, config);
 
 draw_chart = function (value) {
   if (value == null) {
     value = 100;
   }
 
-  // Build the chart
-  Highcharts.chart("container", {
-    chart: {
-      plotBackgroundColor: null,
-      plotBorderWidth: null,
-      plotShadow: false,
-      type: "pie",
-      animation: false,
-    },
-    title: {
-      text: null,
-    },
-    tooltip: {
-      enabled: false,
-    },
-    plotOptions: {
-      pie: {
-        allowPointSelect: false,
-        cursor: "pointer",
-        dataLabels: {
-          enabled: true,
-          format: "<b>{point.name}</b><br>{point.percentage:.1f} %",
-          distance: -40,
-        },
-      },
-      series: {
-        animation: false,
-        states: {
-          hover: {
-            enabled: false,
-          },
-        },
-      },
-    },
-    series: [
-      {
-        name: "Share",
-        data: [
-          { name: "Good", y: value },
-          { name: "Bad", y: 100 - value },
-        ],
-      },
-    ],
-    credits: {
-      enabled: false,
-    },
+  myChart.data.datasets.forEach((dataset) => {
+    dataset.data.pop();
+    dataset.data.pop();
   });
+
+  myChart.data.datasets.forEach((dataset) => {
+    dataset.data.push(value);
+    dataset.data.push(100 - value);
+  });
+
+  myChart.update();
 };
 
 draw_chart(null);
