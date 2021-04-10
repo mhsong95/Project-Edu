@@ -38,9 +38,8 @@
         right: 0;
         bottom: 0;
         width: 100%;
-        border: black;
         display: inline-block;
-      }
+      } 
 
       #screen-video {
         /* position: absolute; */
@@ -96,7 +95,7 @@
       }
 
       #form {
-        background: rgba(0, 0, 0, 0.15);
+        background: rgba(40, 167, 70, 0.5);
         padding: 0.25rem;
         display: flex;
         height: 3rem;
@@ -104,6 +103,7 @@
         box-sizing: border-box;
         backdrop-filter: blur(10px);
         bottom: 1%;
+        border-radius: 0.5rem;
         /* position: absolute; */
       }
 
@@ -120,7 +120,7 @@
       }
 
       #form > button {
-        background: #333;
+        /* background: #333; */
         border: none;
         padding: 0 1rem;
         margin: 0.25rem;
@@ -185,7 +185,8 @@
         <div id="chatting">
           <ul id="messages"></ul>
           <form id="form" action="">
-            <input id="input" autocomplete="off" /><button>Send</button>
+            <input id="input" autocomplete="off" />
+            <button type="button" class="btn btn-success">Send</button>
           </form>
         </div>
       </div>
