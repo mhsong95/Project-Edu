@@ -14,11 +14,10 @@ const { Participant } = require("../models/room");
  */
 module.exports = function (io, socket) {
   // Client sent "message" when user click submit button. Sever sends it back to all client.
-  socket.on("message", (msg, roomId) => {
-    console.log("server socket msg" + msg);
+  socket.on("message", (roomId, msg, name) => {
+    console.log("server socket msg " + msg);
 
-    socket.broadcast.to(roomId).emit("message1", msg);
-    // io.sockets.to(roomId).emit("message1", msg);
+    io.sockets.to(roomId).emit("message1", msg, name);
   });
 
   // get concentrate data from students

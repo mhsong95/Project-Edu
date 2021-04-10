@@ -280,17 +280,17 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", input.value, ROOM_ID);
+    socket.emit("message", ROOM_ID, input.value, myName);
     console.log("listener: " + input.value);
     input.value = "";
   }
 });
 
 // Receive message1 from server.js and add given msg to all client
-socket.on("message1", function (msg) {
+socket.on("message1", function (msg, name) {
   console.log("html socketon");
   var item = document.createElement("li");
-  item.textContent = msg;
+  item.textContent = `${name}: ${msg}`;
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
