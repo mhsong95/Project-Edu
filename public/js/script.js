@@ -241,13 +241,6 @@ socket.on("message1", function (msg) {
 
 // webgazer
 // store calibration
-window.saveDataAcrossSessions = true;
-
-const LOOK_DELAY = 3000; // 3 second
-
-let startLookTime = Number.POSITIVE_INFINITY;
-let lookDirection = null;
-
 function add_concentrate_log(t, level) {
   send_data([userID, t, level]);
 }
@@ -263,50 +256,3 @@ function send_data(data) {
   // Send data to server
   socket.emit("concent_data", ROOM_ID, data);
 }
-
-webgazer
-  .setGazeListener((data, timestamp) => {
-    // console.log(data, timestamp);
-    const videogrid = document.getElementById("video-grid");
-    const left = videogrid.offsetLeft;
-    const right = videogrid.offsetLeft + videogrid.offsetWidth;
-    const top = videogrid.offsetTop;
-    const bottom = videogrid.offsetTop + videogrid.offsetHeight;
-
-    if (data == null || lookDirection === "STOP") return;
-
-    if (
-      data.x >= left &&
-      data.x <= right &&
-      data.y >= top &&
-      data.y <= bottom
-    ) {
-      // videogrid.style.backgroundColor = "blue";
-      if (lookDirection !== null) {
-        add_concentrate_log(timestamp, 10);
-      }
-      startLookTime = Number.POSITIVE_INFINITY; // restart timer
-      lookDirection = null;
-    } else if (lookDirection !== "RESET" && lookDirection === null) {
-      // videogrid.style.backgroundColor = "yellow";
-      startLookTime = timestamp;
-      lookDirection = "OUT";
-      add_concentrate_log(timestamp, 5);
-    }
-
-    if (startLookTime + LOOK_DELAY < timestamp) {
-      console.log(left, right, top, bottom);
-      // videogrid.style.backgroundColor = "red";
-      add_concentrate_log(timestamp, 0);
-
-      startLookTime = Number.POSITIVE_INFINITY;
-      lookDirection = "STOP";
-      setTimeout(() => {
-        lookDirection = "RESET";
-      }, 200);
-    }
-  })
-  .begin();
-
-// uncomment to hide videopreview and predictionpoints of webgazer
-// webgazer.showVideoPreview(false).showPredictionPoints(false);

@@ -16,6 +16,9 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
     <title>Participant@<%= room_name %></title>
     <style>
+      #skip{
+        margin-top: 15%;
+      }
       #screen-video{
         position: absolute;
         z-index: 0;
@@ -143,39 +146,42 @@
       </style>
   </head>
   <body>
-    <canvas id="plotting_canvas" width="500" height="500" style="cursor:crosshair;"></canvas>
-    <video id="screen-video"></video>
-    <div style="width: 100%">
-      <div
-        style="
-          margin: auto 0% auto 5%;
-          width: 65%;
-          float: left;
-          display: inline;
-        "
-      >
-        <div id="video-grid"></div>
-      </div>
+    <div id="main">
+      <video id="screen-video"></video>
+      <div style="width: 100%">
+        <div
+          style="
+            margin: auto 0% auto 5%;
+            width: 65%;
+            float: left;
+            display: inline;
+          "
+        >
+          <div id="video-grid"></div>
+        </div>
 
-      <div
-        id="chatting"
-        style="
-          width: 25%;
-          float: right;
-          margin-right: 5%;
-          margin-bottom: 3%;
-          display: inline;
-          position: absolute;
-          bottom: 0%;
-        "
-      >
-        <ul id="messages"></ul>
-        <form id="form" action="">
-          <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
+        <div
+          id="chatting"
+          style="
+            width: 25%;
+            float: right;
+            margin-right: 5%;
+            margin-bottom: 3%;
+            display: inline;
+            position: absolute;
+            bottom: 0%;
+          "
+        >
+          <ul id="messages"></ul>
+          <form id="form" action="">
+            <input id="input" autocomplete="off" /><button>Send</button>
+          </form>
+        </div>
       </div>
     </div>
     <div id="calib">
+      <canvas id="plotting_canvas" width="500" height="500" style="cursor:crosshair;"></canvas>
+      <button id="skip" onclick="skip()">skip</button>
       <div class="calibrationDiv">
         <input type="button" class="Calibration" id="Pt1"></input>
         <input type="button" class="Calibration" id="Pt2"></input>
