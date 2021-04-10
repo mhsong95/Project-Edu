@@ -244,7 +244,7 @@ function callPresenter(userId, stream) {
   //const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(prof_cam, stream);
+    addVideoStream(prof_cam, userVideoStream);
   });
 
   call.on("close", () => {
