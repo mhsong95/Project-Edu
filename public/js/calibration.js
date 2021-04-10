@@ -80,7 +80,7 @@ $(document).ready(function(){
         $("#calib").hide();
         $("#webgazerVideoContainer").hide();
         $("#main").show();
-        webgazer.showPredictionPoints(false);
+        // webgazer.showPredictionPoints(false);
       }
     });
 });
@@ -89,7 +89,7 @@ function skip(){
   $("#calib").hide();
   $("#webgazerVideoContainer").hide();
   $("#main").show();
-  webgazer.showPredictionPoints(false);
+  // webgazer.showPredictionPoints(false);
 }
 
 window.onload = async function() {
@@ -112,7 +112,7 @@ window.onload = async function() {
       .setGazeListener(function(data, timestamp) {
        console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
         //   console.log(clock); /* elapsed time in milliseconds since webgazer.begin() was called */
-        const videogrid = document.getElementById("video-grid");
+        const videogrid = document.getElementById("screen-video");
         const left = videogrid.offsetLeft;
         const right = videogrid.offsetLeft + videogrid.offsetWidth;
         const top = videogrid.offsetTop;
@@ -150,6 +150,7 @@ window.onload = async function() {
         }
       }).begin();
 
+  /*
   //Set up the webgazer video feedback.
   var setup = function() {
 
@@ -160,6 +161,7 @@ window.onload = async function() {
       canvas.style.position = 'fixed';
   };
   setup();
+  */
 
 };
 

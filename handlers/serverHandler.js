@@ -55,8 +55,8 @@ module.exports = function (io, socket) {
       summary.lastTime = time;
 
       // Log the updated summary and data list for the user.
-      console.log(userId, summary);
-      console.log(userId, levels);
+      // console.log(userId, summary);
+      // console.log(userId, levels);
     }
   });
 };
