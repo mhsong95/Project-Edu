@@ -22,12 +22,29 @@ myPeer.on("open", (id) => {
 /* ####### Data structures ####### */
 
 let presenterId = ""; // The ID of the presenter of the room.
+let screenId = ""; // The ID of the presenter's screen.
 let presenterName = ""; // The name of the presenter.
 let supervisors = []; // The supervisors of the room.
 let participantDict = {}; // Dictionary of participant names.
 
-let presenter, supervisor;
+let presenter, supervisor, screen;
 let conn;
+
+// An empty media stream.
+let emptyStream = new MediaStream([
+  (function ({ width, height }) {
+    const canvas = Object.assign(document.createElement("canvas"), {
+      width,
+      height,
+    });
+    canvas.getContext("2d").fillRect(0, 0, width, height);
+
+    const stream = canvas.captureStream();
+    const track = stream.getVideoTracks()[0];
+
+    return Object.assign(track, { enabled: false });
+  })({ width: 10, height: 10 }),
+]);
 
 /* ####### socket.io data ####### */
 
@@ -39,6 +56,7 @@ let isReady = false;
 
 socket.on("get-ready", (pres, sups, parts) => {
   presenterId = pres.userId;
+  screenId = pres.screenId;
   presenterName = pres.name;
   supervisors = supervisors.concat(sups);
 
@@ -102,7 +120,7 @@ Promise.all([
         presenterName = name;
 
         // Make call to the presenter if you're ready.
-        if (ready) {
+        if (isReady) {
           callPresenter(userId, stream);
         }
       });
@@ -113,50 +131,66 @@ Promise.all([
 
         if (presenter) {
           presenter.close();
+          presenter = null;
+        }
+      });
+
+      socket.on("screenshare-started", (userId) => {
+        screenId = userId;
+
+        // Make call to the screen peer if you're ready.
+        if (isReady) {
+          callScreen(userId);
+        }
+      });
+
+      socket.on("screenshare-stopped", () => {
+        screenId = "";
+
+        if (screen) {
+          screen.close();
+          screen = null;
         }
       });
 
       // A call from the presenter
       myPeer.on("call", (call) => {
-        // // Reject the call if you cannot identify the presenter.
-        // if (presenterId !== call.peer) {
-        //   call.close();
-        //   return;
-        // }
-        let screen = call.metadata.scn;
-        console.log(`Call from ${call.peer}: ${screen}`);
-
-        if (screen) {
-          call.answer();
-        } else {
+        if (call.peer === presenterId) {
+          // Call from the presenter's webcam.
           call.answer(stream);
-        }
 
-        //const video = document.createElement("video");
+          call.on("stream", (userVideoStream) => {
+            addVideoStream(prof_cam, userVideoStream, false);
+          });
 
-        call.on("stream", (userVideoStream) => {
-          console.log(`Stream from ${call.peer}: ${screen}`);
-          if (screen) {
-            addVideoStream(screen_vid, userVideoStream, screen);
-          } else {
-            addVideoStream(prof_cam, userVideoStream, screen);
-          }
-        });
+          call.on("close", () => {
+            prof_cam.srcObject = new MediaStream();
+          });
 
-        call.on("close", () => {
-          if (!screen) {
-            //video.remove();
-            prof_cam.remove();
-          } else {
-            screen_vid.srcObject = null;
-          }
-        });
-
-        if (!screen) {
           if (presenter) {
             presenter.close();
           }
           presenter = call;
+        } else if (call.peer === screenId) {
+          // Call from the presenter's screen.
+          call.answer();
+
+          call.on("stream", (screenStream) => {
+            addVideoStream(screen_vid, screenStream, true);
+          });
+
+          call.on("close", () => {
+            screen_vid.srcObject = new MediaStream();
+          });
+
+          if (screen) {
+            screen.close();
+          }
+          screen = call;
+        } else {
+          // Reject any other calls.
+          call.close();
+          return;
         }
       });
     }),
@@ -164,7 +198,7 @@ Promise.all([
   socket.emit("participant-connected", ROOM_ID);
 });
 
-function addVideoStream(video, stream, screen) {
+function addVideoStream(video, stream) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
@@ -210,11 +244,11 @@ function callPresenter(userId, stream) {
   //const video = document.createElement("video");
 
   call.on("stream", (userVideoStream) => {
-    addVideoStream(my_cam, stream);
+    addVideoStream(prof_cam, userVideoStream);
   });
 
   call.on("close", () => {
-    video.remove();
+    prof_cam.srcObject = new MediaStream();
   });
 
   if (presenter) {
@@ -223,23 +257,41 @@ function callPresenter(userId, stream) {
   presenter = call;
 }
 
+// Call a screen sharing peer.
+function callScreen(userId) {
+  const call = myPeer.call(userId, emptyStream);
+
+  call.on("stream", (screenStream) => {
+    addVideoStream(screen_vid, screenStream, true);
+  });
+
+  call.on("close", () => {
+    screen_vid.srcObject = new MediaStream();
+  });
+
+  if (screen) {
+    screen.close();
+  }
+  screen = call;
+}
+
 // chat
 // If user click submit button, send input value to server socket.
 form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", input.value, ROOM_ID);
+    socket.emit("message", ROOM_ID, input.value, myName);
     console.log("listener: " + input.value);
     input.value = "";
   }
 });
 
 // Receive message1 from server.js and add given msg to all client
-socket.on("message1", function (msg) {
+socket.on("message1", function (msg, name) {
   console.log("html socketon");
   var item = document.createElement("li");
-  item.textContent = msg;
+  item.textContent = `${name}: ${msg}`;
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });

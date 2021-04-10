@@ -80,7 +80,7 @@ $(document).ready(function(){
         $("#calib").hide();
         $("#webgazerVideoContainer").hide();
         $("#main").show();
-        webgazer.showPredictionPoints(false);
+        // webgazer.showPredictionPoints(false);
       }
     });
 });
@@ -89,7 +89,7 @@ function skip(){
   $("#calib").hide();
   $("#webgazerVideoContainer").hide();
   $("#main").show();
-  webgazer.showPredictionPoints(false);
+  // webgazer.showPredictionPoints(false);
 }
 
 window.onload = async function() {

@@ -27,6 +27,42 @@ module.exports = function (io, socket) {
   socket.on("presenter-ready", (roomId, presenterId, supervisorId, name) => {
     presenterReady(socket, roomId, presenterId, supervisorId, name);
   });
+
+  /* ##### Screen sharing ##### */
+
+  socket.on("screenshare-started", (roomId, screenId) => {
+    let room = rooms[roomId];
+
+    // Authenticate the user.
+    if (!isPrivileged(socket.request.session, roomId) || !room?.isOpen) {
+      // If not, emit an event informing of it.
+      socket.emit("rejected", "not-authorized");
+      socket.disconnect(true);
+      return;
+    }
+
+    let presenter = room.presenter;
+    presenter.screenId = screenId;
+
+    socket.broadcast.to(roomId).emit("screenshare-started", screenId);
+  });
+
+  socket.on("screenshare-stopped", (roomId) => {
+    let room = rooms[roomId];
+
+    // Authenticate the user.
+    if (!isPrivileged(socket.request.session, roomId) || !room?.isOpen) {
+      // If not, emit an event informing of it.
+      socket.emit("rejected", "not-authorized");
+      socket.disconnect(true);
+      return;
+    }
+
+    let presenter = room.presenter;
+    presenter.screenId =  null;
+
+    socket.broadcast.to(roomId).emit("screenshare-stopped");
+  });
 };
 
 /**

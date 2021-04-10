@@ -34,7 +34,6 @@ screenPeer.on("open", (id) => {
   screenID = id;
 });
 
-const screen_vid = document.getElementById("screen-video");
 /* ####### Data structures ####### */
 
 // Dictionary of participants' names.
@@ -55,6 +54,8 @@ let myName = prompt("Enter your name", "anonymous");
 // Whether the presenter is ready to make/accept calls.
 let isReady = false;
 
+let screenStream = null;
+
 // Now you are possible to identify participants: You are ready.
 socket.on("get-ready", (participants) => {
   for (let part of participants) {
@@ -72,110 +73,170 @@ socket.on("rejected", (msg) => {
   location.href = `../${ROOM_ID}`; // redirect to room joining page.
 });
 
-const myVideo = document.createElement("video");
-myVideo.muted = true;
-
-Promise.all([
-  navigator.mediaDevices.getDisplayMedia(),
-  navigator.mediaDevices.getUserMedia({
+// Get webcam stream, set event listeners on socket.
+navigator.mediaDevices
+  .getUserMedia({
     video: true,
     audio: true,
-  }),
-]).then(([screenStream, presenterStream]) => {
-  addVideoStream(screen_vid, screenStream, screenID, (screen = true));
-  addVideoStream(myVideo, presenterStream, presenterId);
+  })
+  .then((stream) => {
+    // Insert your video stream into the page.
+    const myVideo = document.createElement("video");
+    myVideo.muted = true;
+    addVideoStream(myVideo, stream, presenterId);
 
-  // Call from a participant to the PRESENTER (audio only)
-  presenterPeer.on("call", (call) => {
-    // Reject the call if you cannot identify the caller.
-    if (participantDict[call.peer] === undefined) {
-      call.close();
-      return;
-    }
+    // Call from a participant to the PRESENTER (audio only)
+    presenterPeer.on("call", (call) => {
+      // Reject the call if you cannot identify the caller.
+      if (participantDict[call.peer] === undefined) {
+        call.close();
+        return;
+      }
 
-    call.answer(presenterStream); // Give your stream.
-    const audio = document.createElement("audio");
+      console.log("Answering with stream");
+      call.answer(stream); // Give your stream.
 
-    call.on("stream", (userAudioStream) => {
-      addAudioStream(audio, userAudioStream, call.peer);
+      // Insert audio stream of the participant into the page.
+      const audio = document.createElement("audio");
+      call.on("stream", (userAudioStream) => {
+        addAudioStream(audio, userAudioStream, call.peer);
+      });
+
+      call.on("close", () => {
+        audio.remove();
+      });
+
+      if (!audiences[call.peer]) {
+        audiences[call.peer] = { webcam: call, screen: null };
+      } else {
+        audiences[call.peer].webcam = call;
+      }
     });
 
-    call.on("close", () => {
-      audio.remove();
+    // Call from a participant to the SUPERVISOR (video only)
+    supervisorPeer.on("call", (call) => {
+      call.answer(); // NO stream.
+
+      const video = document.createElement("video");
+      call.on("stream", (userVideoStream) => {
+        addVideoStream(video, userVideoStream, call.peer);
+      });
+
+      call.on("close", () => {
+        video.remove();
+      });
+
+      observees[call.peer] = call;
     });
 
-    audiences[call.peer] = call;
-  });
+    // Call from a participant to the SCREEN (empty stream)
+    screenPeer.on("call", (call) => {
+      // Reject the call if you cannot identify the caller.
+      if (!screenStream || participantDict[call.peer] === undefined) {
+        call.close();
+        return;
+      }
 
-  // Call from a participant to the SCREEN (empty stream).
-  screenPeer.on("call", (call) => {
-    // Reject the call if you cannot identify the caller.
-    if (participantDict[call.peer] === undefined) {
-      call.close();
-      return;
-    }
+      call.answer(screenStream); // Give the screen stream.
 
-    call.answer(screenStream); // Give your stream.
-  });
-
-  // Call from a participant to the SUPERVISOR (video only)
-  supervisorPeer.on("call", (call) => {
-    call.answer(); // NO stream.
-    const video = document.createElement("video");
-
-    call.on("stream", (userVideoStream) => {
-      addVideoStream(video, userVideoStream, call.peer);
+      // Mark that the caller is getting your screen sharing.
+      if (!audiences[call.peer]) {
+        audiences[call.peer] = { webcam: null, screen: call };
+      } else {
+        audiences[call.peer].screen = call;
+      }
     });
 
-    call.on("close", () => {
-      video.remove();
+    // When a new participant has joined a room.
+    socket.on("participant-joined", (userId, name) => {
+      console.log(`Participant joined: ${userId}, ${name}`);
+
+      participantDict[userId] = name;
+      if (isReady) {
+        // Call the participant only if him/her can identify you.
+        callParticipant(userId, stream, false);
+
+        if (screenStream) {
+          callParticipant(userId, screenStream, (screen = true));
+        }
+      }
     });
 
-    observees[call.peer] = call;
+    // When a participant is disconnected, make sure you close
+    // the call, and thus remove the video on the page.
+    socket.on("participant-leaved", (userId) => {
+      if (audiences[userId]) {
+        audiences[userId].webcam.close();
+        audiences[userId].screen?.close();
+        delete audiences[userId];
+      }
+
+      if (observees[userId]) {
+        observees[userId].close();
+        delete observees[userId];
+      }
+
+      if (participantDict[userId]) {
+        delete participantDict[userId];
+      }
+    });
+
+    // Notify the server that you want to join the room.
+    socket.emit("presenter-connected", ROOM_ID);
   });
 
-  // When a new participant has joined a room.
-  socket.on("participant-joined", (userId, name) => {
-    console.log(`Participant joined: ${userId}, ${name}`);
+// Start screen sharing.
+function startScreenSharing() {
+  // Get the screen stream, notify that screen sharing has started.
+  navigator.mediaDevices.getDisplayMedia().then((stream) => {
+    // Insert your video stream into the page.
+    const screen_vid = document.getElementById("screen-video");
+    screen_vid.muted = true;
+    addVideoStream(screen_vid, stream, screenID, (screen = true));
 
-    participantDict[userId] = name;
-    if (isReady) {
-      // Call the participant only if him/her can identify you.
-      callParticipant(userId, presenterStream, false);
-      callParticipant(userId, screenStream, true);
-    }
+    // When the screen sharing stops.
+    stream.oninactive = () => {
+      screen_vid.srcObject = new MediaStream();
+
+      // Hangup the calls
+      for (let userId in audiences) {
+        audiences[userId].screen?.close();
+        audiences[userId].screen = null;
+      }
+
+      // Notify that screen sharing has stopped.
+      socket.emit("screenshare-stopped", ROOM_ID);
+      screenStream = null;
+
+      let button = document.getElementById("screen-share");
+      button.innerHTML = "Share Screen";
+      button.onclick = startScreenSharing;
+    };
+
+    socket.emit("screenshare-started", ROOM_ID, screenID);
+    screenStream = stream;
+
+    let button = document.getElementById("screen-share");
+    button.innerHTML = "Stop Sharing";
+    button.onclick = stopScreenSharing;
   });
+}
 
-  // When a participant is disconnected, make sure you close
-  // the call, and thus remove the video on the page.
-  socket.on("participant-leaved", (userId) => {
-    if (audiences[userId]) {
-      audiences[userId].close();
-      delete audiences[userId];
-    }
-
-    if (observees[userId]) {
-      observees[userId].close();
-      delete observees[userId];
-    }
-
-    if (participantDict[userId]) {
-      delete participantDict[userId];
-    }
-  });
-
-  // Notify the server that you want to join the room.
-  socket.emit("presenter-connected", ROOM_ID);
-});
+// Stop screen sharing. All you need to do is to stop all the
+// media tracks in the screen stream, then "oninactive" event listener
+// will do everything else for you.
+function stopScreenSharing() {
+  screenStream.getTracks().forEach((track) => track.stop());
+}
 
 function addVideoStream(video, stream, video_id, screen = false) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
-  video.setAttribute("id", video_id);
 
   if (!screen) {
+    video.setAttribute("id", video_id);
     videoGrid.append(video);
   }
 }
@@ -214,9 +275,9 @@ function callParticipant(userId, stream, screen) {
   const call = peer.call(userId, stream, {
     metadata: { scn: screen },
   });
-  const audio = document.createElement("audio");
 
   if (!screen) {
+    const audio = document.createElement("audio");
     call.on("stream", (userAudioStream) => {
       addAudioStream(audio, userAudioStream, userId);
     });
@@ -224,8 +285,16 @@ function callParticipant(userId, stream, screen) {
     call.on("close", () => {
       audio.remove();
     });
+  }
 
-    audiences[userId] = call;
+  if (!audiences[userId]) {
+    audiences[userId] = { webcam: null, screen: null };
+  }
+
+  if (screen) {
+    audiences[userId].screen = call;
+  } else {
+    audiences[userId].webcam = call;
   }
 }
 
@@ -235,17 +304,17 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", input.value, ROOM_ID);
+    socket.emit("message", ROOM_ID, input.value, myName);
     console.log("listener: " + input.value);
     input.value = "";
   }
 });
 
 // Receive message1 from server.js and add given msg to all client
-socket.on("message1", function (msg) {
+socket.on("message1", function (msg, name) {
   console.log("html socketon");
   var item = document.createElement("li");
-  item.textContent = msg;
+  item.textContent = `${name}: ${msg}`;
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
