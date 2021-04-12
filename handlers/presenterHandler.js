@@ -16,16 +16,98 @@ const { isPrivileged } = require("../library/library");
  * @param {Socket} socket
  */
 module.exports = function (io, socket) {
-  /* ##### Handshaking ##### */
+  /* ##### Connection ##### */
 
   // When a presenter wants to join a room.
-  socket.on("presenter-connected", (roomId) => {
-    presenterConnected(socket, roomId);
-  });
+  socket.on("presenter-connected", (roomId, presenterId, name, callback) => {
+    let room = rooms[roomId];
 
-  // By this time, the presenter is able to make/accept calls to/from participants.
-  socket.on("presenter-ready", (roomId, presenterId, supervisorId, name) => {
-    presenterReady(socket, roomId, presenterId, supervisorId, name);
+    // Check if the session is privileged for the room.
+    if (!isPrivileged(socket.request.session, roomId)) {
+      // If not, reject the connection.
+      socket.emit("rejected", "You're not authorized for the room");
+      socket.disconnect(true);
+      return;
+    } else if (room.isOpen && room.presenter) {
+      // If there is already a presenter, also reject the connection.
+      socket.emit("rejected", "Presenter already exists");
+      socket.disconnect(true);
+      return;
+    }
+
+    // Periodically send average concentrate data to presenter.
+    let update_concent = setInterval(function () {
+      let sumConcent = 0;
+      let sumTime = 0;
+      for (let participant of room.participants) {
+        sumConcent = sumConcent + participant.concentSummary.avg;
+        sumTime =
+          sumTime +
+          participant.concentSummary.lastTime -
+          participant.concentSummary.enterTime;
+      }
+      socket.emit("update-concent", (sumConcent / (sumTime * 10)) * 100);
+    }, 10000);
+
+    // Setup event listener on disconnection.
+    socket.on("disconnect", () => {
+      // Stop sending average concentration.
+      clearInterval(update_concent);
+
+      // Clear the presenter from the room's data structure and broadcast.
+      room.presenter = null;
+      socket.broadcast.to(roomId).emit("screenshare-stopped");
+      socket.broadcast.to(roomId).emit("presenter-leaved");
+
+      console.log(`Presenter ${presenterId} leaved from room ${roomId}`);
+    });
+
+    // Update the room's presenter.
+    let presenter = new Presenter(presenterId, socket, name);
+    room.presenter = presenter;
+
+    // Join the socket to the room.
+    socket.join(roomId);
+
+    // Give the list of participants so that he/she can accept calls from them.
+    let participantDict = {};
+    if (room.isOpen) {
+      for (let part of room.participants) {
+        participantDict[part.userId] = part.name;
+      }
+    }
+    callback(participantDict);
+
+    if (!room.isOpen) {
+      // Open the room if it is not already open.
+      room.isOpen = true;
+
+      // Periodically sort participants among supervisors at room creation.
+      let sortParticipants = setInterval(function () {
+        // Also try deleting the room.
+        tryDeleteRoom(room, sortParticipants);
+        room.reassignParticipants(true);
+      }, 60 * 1000); // Every 60 seconds.
+    } else {
+      // Otherwise broadcast that a new presenter has joined.
+      socket.broadcast.to(roomId).emit("presenter-joined", presenterId, name);
+    }
+
+    console.log(`Presenter ${presenterId} joined room ${roomId}`);
+
+    // If no one is in the room, delete the room.
+    function tryDeleteRoom(room, intervalId) {
+      if (
+        !room.presenter &&
+        room.participants.length === 0 &&
+        room.supervisors.length === 0
+      ) {
+        console.log(`Room ${room.roomId} being deleted.`);
+
+        clearInterval(intervalId);
+        delete rooms[room.roomId];
+      }
+    }
   });
 
   /* ##### Screen sharing ##### */
@@ -35,16 +117,19 @@ module.exports = function (io, socket) {
 
     // Authenticate the user.
     if (!isPrivileged(socket.request.session, roomId) || !room?.isOpen) {
-      // If not, emit an event informing of it.
+      // If not authorized, reject the connection.
       socket.emit("rejected", "not-authorized");
       socket.disconnect(true);
       return;
     }
 
+    // Update presenter's screenId from null to given ID.
     let presenter = room.presenter;
     presenter.screenId = screenId;
 
+    // Broadcast to the room.
     socket.broadcast.to(roomId).emit("screenshare-started", screenId);
+    console.log(`Screen sharing on room ${roomId} started by ${screenId}`);
   });
 
   socket.on("screenshare-stopped", (roomId) => {
@@ -58,140 +143,12 @@ module.exports = function (io, socket) {
       return;
     }
 
+    // Set presenter's screenId to null.
     let presenter = room.presenter;
-    presenter.screenId =  null;
+    presenter.screenId = null;
 
+    // Broadcast to the room.
     socket.broadcast.to(roomId).emit("screenshare-stopped");
+    console.log(`Screen sharing on room ${roomId} stopped`);
   });
-};
-
-/**
- * Authenticate the user, join the user to the room,
- * make the user get ready for interactions.
- * @param {Socket} socket
- * @param {String} roomId
- * @param {String} userId
- * @param {String} name
- */
-const presenterConnected = (socket, roomId) => {
-  /**
-   * @type {Room}
-   */
-  let room = rooms[roomId];
-
-  // Check if the session is privileged, and there's no presenter.
-  if (!isPrivileged(socket.request.session, roomId)) {
-    // If not, emit an event informing of it.
-    socket.emit("rejected", "not-authorized");
-    socket.disconnect(true);
-    return;
-  } else if (room.isOpen && room.presenter) {
-    // If there is already a presenter, also reject.
-    socket.emit("rejected", "presenter-exists");
-    socket.disconnect(true);
-    return;
-  }
-
-  // If re-entering the room, let the presenter get ready for calls.
-  let participants = []; // The list of participants to send.
-  if (room.isOpen) {
-    participants = room.participants.map((part) => {
-      return {
-        userId: part.userId,
-        name: part.name,
-      };
-    });
-  }
-
-  // Join the socket to the room:
-  // The presenter is now able to synchronize data with the server,
-  // but cannot make or receive calls.
-  socket.join(roomId);
-
-  // Send the participant list.
-  socket.emit("get-ready", participants);
-};
-
-/**
- * The presenter is now ready to make/receive calls.
- * Store data structures, open the room or broadcast that
- * the presenter has joined.
- * @param {Socket} socket
- * @param {String} roomId
- * @param {String} userId
- * @param {String} name
- * @returns
- */
-const presenterReady = (socket, roomId, presenterId, supervisorId, name) => {
-  let room = rooms[roomId];
-
-  // Check if the session is privileged, and there's no presenter.
-  if (!isPrivileged(socket.request.session, roomId)) {
-    // If not, emit an event informing of it.
-    socket.emit("rejected", "not-authorized");
-    socket.disconnect(true);
-    return;
-  } else if (room.isOpen && room.presenter) {
-    // If there is already a presenter, also rejected.
-    socket.emit("rejected", "presenter-exists");
-    socket.disconnect(true);
-    return;
-  }
-
-  // Setup event listeners.
-  socket.on("disconnect", () => {
-    room.presenter = null;
-    socket.broadcast.to(roomId).emit("presenter-leaved");
-    room.removeSupervisor(supervisorId);
-    clearInterval(update_concent); // Stop updating.
-  });
-
-  // Data structures for presenter
-  let presenter = new Presenter(presenterId, socket, name);
-  room.presenter = presenter;
-
-  // Open the room if it is not already open.
-  if (!room.isOpen) {
-    room.isOpen = true;
-
-    // Periodically sort participants among supervisors at room creation.
-    let sortParticipants = setInterval(function () {
-      // Also try deleting the room.
-      tryDeleteRoom(room, sortParticipants);
-      room.reassignParticipants(true);
-    }, 60 * 1000); // Every 60 seconds.
-  } else {
-    // Otherwise broadcast that the presenter has joined.
-    socket.broadcast.to(roomId).emit("presenter-joined", presenterId, name);
-  }
-
-  // Presenter is also a supervisor with highest priority and infinite capacity.
-  let supervisor = new Supervisor(supervisorId, socket, Infinity, Infinity);
-  room.addSupervisor(supervisor);
-
-  // Send average concentrate data to presenter.
-  var update_concent = setInterval(function () {
-    var sumConcent = 0;
-    var sumTime = 0;
-    for (let participant of room.participants) {
-      sumConcent = sumConcent + participant.concentSummary.avg;
-      sumTime =
-        sumTime +
-        participant.concentSummary.lastTime -
-        participant.concentSummary.enterTime;
-    }
-    socket.emit("update-concent", (sumConcent / (sumTime * 10)) * 100);
-  }, 10000);
-
-  // If no one is in the room, delete the room.
-  function tryDeleteRoom(room, intervalId) {
-    if (
-      !room.presenter &&
-      room.participants.length === 0 &&
-      room.supervisors.length === 0
-    ) {
-      clearInterval(intervalId);
-      delete rooms[room.roomId];
-    }
-  }
 };

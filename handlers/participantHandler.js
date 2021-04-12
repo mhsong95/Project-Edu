@@ -13,93 +13,45 @@ const { Participant, Room } = require("../models/room");
  * @param {Socket} socket
  */
 module.exports = function (io, socket) {
-  /* ##### Handshaking ##### */
+  /* ##### Connection ##### */
 
   // When a participant wants to join a room.
-  socket.on("participant-connected", (roomId) => {
-    participantConnected(socket, roomId);
+  socket.on("participant-connected", (roomId, userId, name, callback) => {
+    let room = rooms[roomId];
+
+    // Check if there is a room.
+    if (!room?.isOpen) {
+      socket.emit("rejected", "Room not found");
+      socket.disconnect(true);
+      return;
+    }
+
+    // Event listener on disconnection.
+    socket.on("disconnect", () => {
+      socket.broadcast.to(roomId).emit("participant-leaved", userId);
+      room.removeParticipant(userId);
+    });
+
+    // Join the socket to the room.
+    socket.join(roomId);
+
+    // Give the presenter's information so that he/she can accept calls.
+    let presenterInfo = null;
+    if (room.presenter) {
+      presenterInfo = {
+        presenterId: room.presenter.userId,
+        screenId: room.presenter.screenId,
+        name: room.presenter.name,
+      };
+    }
+    callback(presenterInfo);
+
+    // Broadcast that a new participant has joined.
+    socket.broadcast.to(roomId).emit("participant-joined", userId, name);
+
+    // Add the participant to the room data structure, 
+    // then rearrange participants.
+    let participant = new Participant(userId, socket, name);
+    room.addParticipant(participant);
   });
-
-  // Data is synchronized, and the participant is ready.
-  socket.on("participant-ready", (roomId, userId, name) => {
-    participantReady(socket, roomId, userId, name);
-  });
-};
-
-/**
- * Check if the room is open, and get the participant ready
- * by synchronizing data.
- * @param {Socket} socket
- * @param {String} roomId
- */
-const participantConnected = (socket, roomId) => {
-  /**
-   * @type {Room}
-   */
-  let room = rooms[roomId];
-
-  // Room not found.
-  if (!room?.isOpen) {
-    socket.emit("rejected", "room-not-found");
-    socket.disconnect(true);
-    return;
-  }
-
-  // Synchronize data with server.
-
-  let presenter = null;
-  if (room.presenter) {
-    presenter = { 
-      userId: room.presenter.userId, 
-      screenId: room.presenter.screenId,
-      name: room.presenter.name };
-  }
-  let supervisors = room.supervisors.map((sup) => sup.userId);
-  let participants = room.participants.map((part) => {
-    return {
-      userId: part.userId,
-      name: part.name,
-    };
-  });
-
-  // Join the socket to the room:
-  // The participant now can synchronize data with server.
-  socket.join(roomId);
-
-  // Send the room information.
-  socket.emit("get-ready", presenter, supervisors, participants);
-};
-
-/**
- * The participant is now ready to receive calls.
- * Store data structures, broadcast that
- * the participant has joined.
- * @param {Socket} socket
- * @param {String} roomId
- * @param {String} userId
- * @param {String} name
- * @returns
- */
-const participantReady = (socket, roomId, userId, name) => {
-  let room = rooms[roomId];
-
-  // Room not found.
-  if (!room?.isOpen) {
-    socket.emit("rejected", "room-not-found");
-    socket.disconnect(true);
-    return;
-  }
-
-  // Setup event listeners.
-  socket.on("disconnect", () => {
-    socket.broadcast.to(roomId).emit("participant-leaved", userId);
-    room.removeParticipant(userId);
-  });
-
-  // Broadcast that a new participant has joined.
-  socket.broadcast.to(roomId).emit("participant-joined", userId, name);
-
-  // Add data structure for a participant, then reassign the participants.
-  let participant = new Participant(userId, socket, name);
-  room.addParticipant(participant);
 };
