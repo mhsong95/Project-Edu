@@ -110,7 +110,7 @@ window.onload = async function() {
   await webgazer.setRegression('ridge') /* currently must set regression and tracker */
       //.setTracker('clmtrackr')
       .setGazeListener(function(data, timestamp) {
-       console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
+        //console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
         //   console.log(clock); /* elapsed time in milliseconds since webgazer.begin() was called */
         const videogrid = document.getElementById("screen-video");
         const left = videogrid.offsetLeft;
