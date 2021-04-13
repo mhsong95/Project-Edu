@@ -667,17 +667,19 @@ const config = {
   type: "doughnut",
   data,
   options: {
+    // tooltips: {enabled: false},
+    // hover: {mode: null},
     legend: {
       display: false,
       // position: "top",
     },
-    tooltips: {
-      callbacks: {
-        label: function (tooltipItem) {
-          return tooltipItem.yLabel;
-        },
-      },
-    },
+    // tooltips: {
+    //   callbacks: {
+    //     label: function (tooltipItem) {
+    //       return tooltipItem.yLabel;
+    //     },
+    //   },
+    // },
     responsive: true,
     plugins: {
       title: {
