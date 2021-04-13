@@ -462,6 +462,8 @@ function send_data(data) {
     supervisor.conn.send(data);
   }
 
+  console.log(data);
+
   // Send data to server
   socket.emit("concent_data", ROOM_ID, data);
 }

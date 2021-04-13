@@ -671,13 +671,6 @@ const config = {
       display: false,
       // position: "top",
     },
-    tooltips: {
-      callbacks: {
-        label: function (tooltipItem) {
-          return tooltipItem.yLabel;
-        },
-      },
-    },
     responsive: true,
     plugins: {
       title: {
