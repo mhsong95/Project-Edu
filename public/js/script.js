@@ -77,6 +77,19 @@ Promise.all([
     audioStream.getAudioTracks()[0],
   ]);
   addVideoStream(my_cam, myStream);
+  
+  // Add onclick event listener on the MUTE button.
+  let button = document.getElementById("mute");
+  button.onclick = (ev) => {
+    let purpose = button.innerText;
+    if (purpose === "MUTE") {
+      audioStream.getAudioTracks()[0].enabled = false;
+      button.innerText = "UNMUTE";
+    } else {
+      audioStream.getAudioTracks()[0].enabled = true;
+      button.innerText = "MUTE";
+    }
+  };
 
   // When a new presenter joins the room.
   socket.on("presenter-joined", (presenterId, name) => {
