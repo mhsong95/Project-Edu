@@ -125,8 +125,6 @@ class Room {
    * @param {Boolean} sort Whether you want to sort the participants according to concentration average.
    */
   reassignParticipants(sort = false) {
-    let index = 0;
-
     // If participant sorting is required, sort them before re-assigning.
     if (sort) {
       this.participants.sort((part1, part2) => {
@@ -134,18 +132,32 @@ class Room {
       });
     }
 
+    const time = Date.now();  // Timestamp for the current assignment.
+    console.log(`Participants are being re-assigned at ${Date(time)}`);
+
+    let index = 0; // index in this.participants
     for (let supervisor of this.supervisors) {
+      // Participants who are newly assigned to the supervisor.
+      let newParticipants = {};
+
       for (let capacity = supervisor.capacity; capacity > 0; capacity--) {
         let participant = this.participants[index];
-        if (!participant) return;
+        if (!participant) break;
 
         // Check if the participant have to change the supervisor.
         if (participant.supervisorId !== supervisor.userId) {
-          participant.socket.emit("call-supervisor", supervisor.userId);
+          // If have to change, emit 'call-supervisor' event with timestamp.
+          participant.socket.emit("call-supervisor", supervisor.userId, time);
           participant.supervisorId = supervisor.userId;
         }
+
+        // Accumulate the new assignments for the supervisor.
+        newParticipants[participant.userId] = participant.name;
         index++;
       }
+
+      // Send the supervisor that a new assignment happened.
+      supervisor.socket.emit("new-assignment", newParticipants, time);
     }
   }
 }

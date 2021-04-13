@@ -16,7 +16,9 @@ const options = {
 
 const app = express(); // Express server
 const server = require("https").createServer(options, app); // HTTP server
-const io = new (require("socket.io").Server)(server); // socket.io server
+const io = new (require("socket.io").Server)(server, {  // Socket.io server
+  transports: [ "websocket" ],
+}); // Force WebSocket transport to assure in-order arrival of events.
 
 // Require routers
 const indexRouter = require("./routes/index");
