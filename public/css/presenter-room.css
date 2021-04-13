@@ -178,6 +178,13 @@ right: 0;
 margin: 1rem;
 }
 
+#screen-share {
+    position: absolute;
+    right: 0;
+    margin: 1rem;
+    margin-top: 4rem;
+}
+
 @media screen and (min-width: 1950px) {
     #left {
         width: 80%
