@@ -9,18 +9,8 @@
     height: 150px;
     top: 0;
     margin: 1rem;
+    z-index: 1;
 }
-
-#chatting {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    display: inline-block;
-    height: initial;
-    margin-bottom: 1rem;
-    padding-right: 1rem;
-} 
 
 #screen-wrapper {
     height: auto;
@@ -105,6 +95,19 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 }
 
 
+#chatting {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding-top: 200px;
+    padding-bottom: 4rem;
+    width: 100%;
+    display: inline-block;
+    height: 100%;
+    margin-bottom: 1rem;
+    padding-right: 1rem;
+} 
+
 #form {
     background: rgba(40, 167, 70, 0.5);
     padding: 0.25rem;
@@ -113,21 +116,21 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     /* width: 100%; */
     box-sizing: border-box;
     backdrop-filter: blur(10px);
-    bottom: 1%;
+    bottom: 1rem;
     border-radius: 0.5rem;
     /* position: absolute; */
 }
 
 #input {
-border: none;
-padding: 0 1rem;
-flex-grow: 1;
-border-radius: 2rem;
-margin: 0.25rem;
+    border: none;
+    padding: 0 1rem;
+    flex-grow: 1;
+    border-radius: 2rem;
+    margin: 0.25rem;
 }
 
 #input:focus {
-outline: none;
+    outline: none;
 }
 
 #form > button {
@@ -147,38 +150,34 @@ outline: none;
     list-style-type: none;
     word-wrap: break-word;
     white-space: pre-wrap;
-    position: absolute;
+    /* position: absolute;
     bottom: 5%;
     right: 5%;
     width: 100%;
     height: 70%;
+    overflow-y: scroll; */
+    margin: 0;
+    overflow: hidden;
     overflow-y: scroll;
+    height: inherit;
 }
 
-#messages > li {
-padding: 0.5rem 1rem;
-}
+.message {
+    padding: 0.5rem 1rem;
+    margin: 0.1rem;
+    border-radius: 10px;
+    border-bottom: 0.001rem solid rgba(40, 167, 70, 0.5);
 
-#messages > li:nth-child(odd) {
-background: #efefef;
-}
-
-/* .highcharts-figure,
-.highcharts-data-table table {
-min-width: 100px;
-max-width: 200px;
-margin: 1em auto;
-} */
-#messages > li:nth-child(odd) {
-background: #efefef;
+    background: rgba(40, 167, 70, 0.219);
+    
 }
 
 #invite {
-/* float: left; */
-position: absolute;
-/* z-index: 1; */
-right: 0;
-margin: 1rem;
+    /* float: left; */
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    margin: 1rem;
 }
 
 #screen-share {
@@ -186,6 +185,7 @@ margin: 1rem;
     right: 0;
     margin: 1rem;
     margin-top: 4rem;
+    z-index: 1;
 }
 
 @media screen and (min-width: 1950px) {
@@ -215,8 +215,10 @@ margin: 1rem;
         bottom: 0;
         width: 90%;
         display: inline-block;
-        height: initial;
+        height: 100%;
         margin-bottom: 1rem;
+        padding-top: 150px;
+        padding-bottom: 4rem;
     }
 
     #form {
@@ -264,7 +266,12 @@ margin: 1rem;
         bottom: 0;
         width: 90%;
         display: inline-block;
-        height: initial;
+        height: 40%;
         margin-bottom: 1rem;
+        padding-top: 0;
+    }
+
+    #messages {
+        height: 100%;
     }
 }

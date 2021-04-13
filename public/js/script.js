@@ -3,7 +3,16 @@ const socket = io("/", {
 }); // Force WebSocket transport to assure in-order arrival of events.
 
 let questions = {};
-let colors = ["#D88559", "#D159D8", "#595BD9", "#5CD859", "#8022D9", "#2D3436", "#24A6D9", "#A7CBD9"];
+let colors = [
+  "#D88559",
+  "#D159D8",
+  "#595BD9",
+  "#5CD859",
+  "#8022D9",
+  "#2D3436",
+  "#24A6D9",
+  "#A7CBD9",
+];
 
 /* ####### Peer setup ####### */
 
@@ -327,18 +336,18 @@ form.addEventListener("submit", function (e) {
   }
 });
 
-function showbig(id){
+function showbig(id) {
   document.getElementById("questions").style.display = "none";
   document.getElementById(id).style.display = "block";
 }
 
-function closenres(id){
+function closenres(id) {
   document.getElementById(id).style.display = "none";
   document.getElementById("questions").style.display = "block";
 }
-function sendnback(uuid){
+function sendnback(uuid) {
   var answer = document.getElementById(uuid + "-ans").value;
-  if(answer){
+  if (answer) {
     socket.emit("message", ROOM_ID, "answer", uuid, answer, myName);
     input.value = "";
   }
@@ -347,12 +356,12 @@ function sendnback(uuid){
   document.getElementById("questions").style.display = "block";
 }
 
-function doupdate(uuid){
+function doupdate(uuid) {
   var det = document.getElementById(uuid + "-content");
   det.innerHTML = "";
   lis = questions[uuid];
-  if(lis.length > 2){
-    for(var i = 2; i < lis.length; i++){
+  if (lis.length > 2) {
+    for (var i = 2; i < lis.length; i++) {
       var cont = document.createElement("text");
       cont.textContent = lis[i][0] + ": " + lis[i][1];
       det.appendChild(cont);
@@ -362,12 +371,11 @@ function doupdate(uuid){
   }
 }
 
-function partilist(){
+function partilist() {
   var e = document.getElementById("partlist");
-  if(e.style.display == "none"){
+  if (e.style.display == "none") {
     e.style.display = "block";
-  }
-  else{
+  } else {
     e.style.display = "none";
   }
 }
@@ -384,11 +392,17 @@ form.addEventListener("submit", function (e) {
 });
 
 socket.on("message1", function (msg, name) {
+  // console.log("html socketon");
+  // var item = document.createElement("li");
+  // item.textContent = `${name}: ${msg}`;
+  // messages.appendChild(item);
+  // window.scrollTo(0, document.body.scrollHeight);
   console.log("html socketon");
-  var item = document.createElement("li");
+  var item = document.createElement("div");
   item.textContent = `${name}: ${msg}`;
+  item.className = "message";
   messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
+  messages.scrollTop = messages.scrollHeight;
 });
 
 // webgazer
