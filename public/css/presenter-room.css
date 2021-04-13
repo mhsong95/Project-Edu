@@ -9,6 +9,7 @@
     height: 150px;
     top: 0;
     margin: 1rem;
+    z-index: 1;
 }
 
 #screen-wrapper {
@@ -129,7 +130,7 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 }
 
 #input:focus {
-outline: none;
+    outline: none;
 }
 
 #form > button {
@@ -149,16 +150,16 @@ outline: none;
     list-style-type: none;
     word-wrap: break-word;
     white-space: pre-wrap;
-    position: absolute;
+    /* position: absolute;
     bottom: 5%;
     right: 5%;
     width: 100%;
     height: 70%;
-    overflow-y: scroll;
-    /* margin: 0;
+    overflow-y: scroll; */
+    margin: 0;
     overflow: hidden;
     overflow-y: scroll;
-    height: inherit; */
+    height: inherit;
 }
 
 .message {
@@ -172,11 +173,11 @@ outline: none;
 }
 
 #invite {
-/* float: left; */
-position: absolute;
-/* z-index: 1; */
-right: 0;
-margin: 1rem;
+    /* float: left; */
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    margin: 1rem;
 }
 
 #screen-share {
@@ -184,6 +185,7 @@ margin: 1rem;
     right: 0;
     margin: 1rem;
     margin-top: 4rem;
+    z-index: 1;
 }
 
 @media screen and (min-width: 1950px) {

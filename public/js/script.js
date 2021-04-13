@@ -392,84 +392,17 @@ form.addEventListener("submit", function (e) {
 });
 
 socket.on("message1", function (msg, name) {
+  // console.log("html socketon");
+  // var item = document.createElement("li");
+  // item.textContent = `${name}: ${msg}`;
+  // messages.appendChild(item);
+  // window.scrollTo(0, document.body.scrollHeight);
   console.log("html socketon");
-  var item = document.createElement("li");
+  var item = document.createElement("div");
   item.textContent = `${name}: ${msg}`;
+  item.className = "message";
   messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
-});
-
-socket.on("question", function (uuid, msg, name) {
-  console.log("question arrived");
-  questions[uuid] = [];
-  questions[uuid].push(msg, name);
-  //entry information
-  var fr = document.createElement("div");
-  var title = document.createElement("text");
-  var btn = document.createElement("button");
-  fr.className = "fr";
-  fr.id = uuid;
-  fr.style.height = "20%";
-  len = Object.keys(questions).length;
-  fr.style.backgroundColor = colors[len % 8];
-  title.className = "tit";
-  title.textContent = msg;
-  fr.appendChild(title);
-  btn.className = "btn";
-  btn.textContent = "Detail";
-  fr.appendChild(btn);
-
-  document.getElementById("questions").appendChild(fr);
-  //detail information
-  list = questions[uuid];
-  var biginfo = document.createElement("div");
-  biginfo.id = uuid + "--detail";
-  biginfo.className = "biginfo";
-  biginfo.style.backgroundColor = colors[len % 8];
-  document.getElementById("main").appendChild(biginfo);
-
-  var btitle = document.createElement("text");
-  btitle.textContent = list[0];
-  btitle.className = "btitle";
-  biginfo.appendChild(btitle);
-
-  var cont = document.createElement("div");
-  cont.id = uuid + "-content";
-  biginfo.appendChild(cont);
-
-  var inp = document.createElement("input");
-  inp.id = uuid + "-ans";
-  inp.className = "inp";
-  inp.placeholder = "Answer";
-  biginfo.appendChild(inp);
-  var sub = document.createElement("button");
-  sub.id = uuid + "-sub";
-  sub.className = "sub";
-  sub.textContent = "Submit";
-  sub.onclick = function () {
-    sendnback(uuid);
-  };
-  var clobtn = document.createElement("button");
-  clobtn.textContent = "Close";
-  clobtn.className = "clobtn";
-  clobtn.onclick = function () {
-    closenres(biginfo.id);
-  };
-  biginfo.appendChild(sub);
-  biginfo.appendChild(clobtn);
-  biginfo.style.display = "none";
-
-  btn.onclick = function () {
-    showbig(biginfo.id);
-  };
-});
-
-socket.on("answer", function (uuid, msg, name) {
-  console.log("answer arrived");
-  var queslist = questions[uuid];
-  queslist.push([name, msg]);
-  console.log(questions);
-  doupdate(uuid);
+  messages.scrollTop = messages.scrollHeight;
 });
 
 // webgazer
