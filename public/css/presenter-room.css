@@ -44,6 +44,22 @@ grid-template-columns: repeat(auto-fill, 150px);
 overflow-x: scroll;
 }
 
+.video-container {
+  position: relative;
+}
+
+.name-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0.5em 0.5em 0.5em 0.5em;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+}
+
 video {
 width: 100%;
 height: 100%;
@@ -133,7 +149,7 @@ word-wrap: break-word;
 white-space: pre-wrap;
 margin: 0;
 padding: 0;
-position: absolute;
+/* position: absolute; */
 }
 
 #messages > li {
