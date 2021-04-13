@@ -1,0 +1,225 @@
+  #skip{
+    margin-top: 15%;
+  }
+
+  #questions{
+    position: absolute;
+    bottom: 8%;
+    right: 1%;
+    height: 50%;
+    width: 17%;
+    border-radius: 30px;
+    overflow-y: scroll;
+  }
+
+  #questions::-webkit-scrollbar{
+    opacity: 40%;
+    width: 5px;
+    border-radius: 30px;
+  }
+
+  #questions::-webkit-scrollbar-thumb{
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 30px;
+  }
+
+  #screen-video{
+    top: 1%;
+    left: 0.5%;
+    position: absolute;
+    z-index: 0;
+    height: 90%;
+    width: 80%;
+    background-color: black;
+    object-fit: contain;
+  }
+
+  #my-cam{
+    top: 1%;
+    right: 0%;
+    position: absolute;
+    height: 20%;
+    width: 20%;
+    object-fit: contain;
+  }
+
+  #prof-cam{
+    top: 21%;
+    right: 0%;
+    position: absolute;
+    height: 20%;
+    width: 20%;
+    object-fit: contain;
+  }
+
+  #chatting{
+    width: 18%;
+    float: right;
+    right: 0.5%;
+    bottom: 1%;
+    display: inline;
+    position: absolute;
+    border-radius: 10px;
+  }
+
+  /* chat style */
+  body {
+    margin: 0;
+    padding-bottom: 3rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+  }
+
+  #form {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 30px;
+    padding: 0.25rem;
+    display: flex;
+    height: 3rem;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+  }
+
+  #input {
+    border: none;
+    padding: 0 1rem;
+    flex-grow: 1;
+    border-radius: 2rem;
+    margin: 0.25rem;
+  }
+
+  #input:focus {
+    outline: none;
+  }
+
+  #form > button {
+    background: #333;
+    border: none;
+    padding: 0 1rem;
+    margin: 0.25rem;
+    border-radius: 3px;
+    outline: none;
+    border-radius: 30px;
+    color: #fff;
+  }
+
+  #messages {
+    list-style-type: none;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    margin: 0;
+    padding: 0;
+  }
+
+  #messages > li {
+    padding: 0.5rem 1rem;
+  }
+
+  #messages > li:nth-child(odd) {
+    background: #efefef;
+  }
+
+  .fr{
+      border-radius: 30px;
+      margin: 10px;
+  }
+
+  .tit{
+      text-align: center;
+      color: white;
+      margin: 10%;
+  }
+
+  .btn{
+      position: relative;
+      bottom: 5%;
+      right: 5%;
+  }
+
+  .biginfo{
+      position: absolute;
+      bottom: 8%;
+      right: 1%;
+      height: 50%;
+      width: 17%;
+      border-radius: 30px;
+      z-index: 10;
+      overflow-y: scroll;
+  }
+
+  .btitle{
+      text-align: center;
+      color: white;
+      margin: 10%;
+  }
+
+  .inp{
+      position: absolute;
+      width: 80%;
+      bottom: 5%;
+      right: 10%;
+  }
+
+  .sub{
+      position: absolute;
+      width: 5%;
+      bottom: 5%;
+      right: 5%;
+  }
+
+  .clobtn{
+    position: absolute;
+    width: 5%;
+    top: 5%;
+    right: 5%;
+  }
+
+  .Calibration{
+    width: 20px;
+    height: 20px;
+    -webkit-border-radius: 25px;
+    -moz-border-radius: 25px;
+    border-radius: 25px;
+    background-color: red;
+    opacity: 0.2;
+    border-color: black;
+    border-style: solid;
+    position:fixed;
+  }
+    #Pt1{
+        top: 70px;
+        left:340px;
+    }
+    #Pt2{
+        top: 70px;
+        left:50vw;
+        margin-left: 340;
+    }
+    #Pt3{
+        top: 70px;
+        right:2vw;
+    }
+    #Pt4{
+        top:50vh;
+        left:2vw;
+    }
+    #Pt5{
+        top: 50vh;
+        left: 50vw;
+    }
+    #Pt6{
+        top: 50vh;
+        right:2vw;
+    }
+    #Pt7{
+        bottom:2vw;
+        left: 2vw;
+    }
+    #Pt8{
+        bottom:2vw;
+        left:50vw;
+    }
+    #Pt9{
+        bottom:2vw;
+        right:2vw;
+    }

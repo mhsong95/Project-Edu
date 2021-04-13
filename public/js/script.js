@@ -2,6 +2,11 @@ const socket = io("/", {
   transports: ["websocket"],
 }); // Force WebSocket transport to assure in-order arrival of events.
 
+let questions = {};
+let colors = ["#D88559", "#D159D8", "#595BD9", "#5CD859", "#8022D9", "#2D3436", "#24A6D9", "#A7CBD9"];
+
+/* ####### Peer setup ####### */
+
 const screen_vid = document.getElementById("screen-video");
 const prof_cam = document.getElementById("prof-cam");
 const my_cam = document.getElementById("my-cam");
@@ -288,19 +293,119 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", ROOM_ID, input.value, myName);
+    socket.emit("message", ROOM_ID, "question", null, input.value, myName);
     console.log("listener: " + input.value);
     input.value = "";
   }
 });
 
+function showbig(id){
+  document.getElementById("questions").style.display = "none";
+  document.getElementById(id).style.display = "block";
+}
+
+function closenres(id){
+  document.getElementById(id).style.display = "none";
+  document.getElementById("questions").style.display = "block";
+}
+function sendnback(uuid){
+  var answer = document.getElementById(uuid + "-ans").value;
+  if(answer){
+    socket.emit("message", ROOM_ID, "answer", uuid, answer, myName);
+    input.value = "";
+  }
+  var id = uuid + "--detail";
+  document.getElementById(id).style.display = "none";
+  document.getElementById("questions").style.display = "block";
+}
+
+function doupdate(uuid){
+  var det = document.getElementById(uuid + "-content");
+  det.innerHTML = "";
+  lis = questions[uuid];
+  if(lis.length > 2){
+    for(var i = 2; i < lis.length; i++){
+      var cont = document.createElement("text");
+      cont.textContent = lis[i][0] + ": " + lis[i][1];
+      det.appendChild(cont);
+      var newline = document.createElement("br");
+      det.appendChild(newline);
+    }
+  }
+}
+
 // Receive message1 from server.js and add given msg to all client
-socket.on("message1", function (msg, name) {
-  console.log("html socketon");
-  var item = document.createElement("li");
-  item.textContent = `${name}: ${msg}`;
-  messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
+socket.on("question", function (uuid, msg, name) {
+  console.log("question arrived");
+  questions[uuid] = [];
+  questions[uuid].push(msg, name);
+  //entry information
+  var fr = document.createElement("div");
+  var title = document.createElement("text");
+  var btn = document.createElement("button");
+  fr.className = "fr";
+  fr.id = uuid;
+  fr.style.height = "20%";
+  len = Object.keys(questions).length;
+  fr.style.backgroundColor = colors[len%8];
+  title.className = "tit";
+  title.textContent = msg;
+  fr.appendChild(title);
+  btn.className = "btn";
+  btn.textContent = "Detail";
+  fr.appendChild(btn);
+
+  document.getElementById("questions").appendChild(fr);
+//detail information
+  list = questions[uuid];
+  var biginfo = document.createElement("div");
+  biginfo.id = uuid + "--detail"
+  biginfo.className = "biginfo";
+  biginfo.style.backgroundColor = colors[len%8];
+  document.getElementById("main").appendChild(biginfo);
+
+  var btitle = document.createElement("text");
+  btitle.textContent = list[0];
+  btitle.className = "btitle";
+  biginfo.appendChild(btitle);
+
+  var cont = document.createElement("div");
+  cont.id = uuid + "-content";
+  biginfo.appendChild(cont);
+
+  var inp = document.createElement("input");
+  inp.id = uuid + "-ans";
+  inp.className = "inp";
+  inp.placeholder = "Answer";
+  biginfo.appendChild(inp);
+  var sub = document.createElement("button");
+  sub.id = uuid + "-sub";
+  sub.className = "sub";
+  sub.textContent = "Submit";
+  sub.onclick = function(){
+    sendnback(uuid);
+  }
+  var clobtn = document.createElement("button");
+  clobtn.textContent = "Close";
+  clobtn.className = "clobtn";
+  clobtn.onclick = function(){
+    closenres(biginfo.id);
+  }
+  biginfo.appendChild(sub);
+  biginfo.appendChild(clobtn);
+  biginfo.style.display = "none";
+
+  btn.onclick = function(){
+    showbig(biginfo.id);
+  }
+});
+
+socket.on("answer", function (uuid, msg, name) {
+  console.log("answer arrived");
+  var queslist = questions[uuid];
+  queslist.push([name, msg])
+  console.log(questions);
+  doupdate(uuid);
 });
 
 // webgazer
