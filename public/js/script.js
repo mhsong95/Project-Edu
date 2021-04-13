@@ -1,5 +1,5 @@
 const socket = io("/", {
-  transports: [ "websocket" ],
+  transports: ["websocket"],
 }); // Force WebSocket transport to assure in-order arrival of events.
 
 const screen_vid = document.getElementById("screen-video");
@@ -16,8 +16,11 @@ const myPeer = new Peer(undefined, {
 
 // Resolve Peer ID.
 let userId = "";
-myPeer.on("open", (id) => {
-  userId = id;
+let userIdPromise = new Promise((resolve) => {
+  myPeer.on("open", (id) => {
+    userId = id;
+    resolve(id);
+  });
 });
 
 /* ####### Data structures ####### */
@@ -184,13 +187,15 @@ Promise.all([
   });
 
   // Finally notify the server that you want to join the room.
-  socket.emit(
-    "participant-connected",
-    ROOM_ID,
-    userId,
-    myName,
-    resolvePendingCalls
-  );
+  userIdPromise.then((userId) => {
+    socket.emit(
+      "participant-connected",
+      ROOM_ID,
+      userId,
+      myName,
+      resolvePendingCalls
+    );
+  });
 
   // Callback sent to the server to receive the presenter's identity
   // and resolve the pending calls.
