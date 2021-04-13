@@ -608,7 +608,7 @@ form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
   if (input.value) {
-    socket.emit("message", ROOM_ID, input.value, myName);
+    socket.emit("message", ROOM_ID, null, null, input.value, myName);
     console.log("listener: " + input.value);
     input.value = "";
   }
@@ -641,7 +641,7 @@ Chart.pluginService.register({
     ctx.font = fontSize + "em sans-serif";
     ctx.textBaseline = "middle";
 
-    var text = chart.config.data.datasets[0].data[0] + "%",
+    var text = chart.config.data.datasets[0].data[0].toFixed(2) + "%",
       textX = Math.round((width - ctx.measureText(text).width) / 2),
       textY = height / 2;
 

@@ -131,12 +131,11 @@ window.onload = async function() {
           data.y <= bottom
         ) {
           // videogrid.style.backgroundColor = "blue";
-          startLookTime = Number.POSITIVE_INFINITY; // restart timer
-          lookDirection = null;
           if (send && (lookDirection !== null) ){
             add_concentrate_log(timestamp, 10);
           }
-          else console.log(send);
+          startLookTime = Number.POSITIVE_INFINITY; // restart timer
+          lookDirection = null;
         } else if (lookDirection !== "RESET" && lookDirection === null) {
           // videogrid.style.backgroundColor = "yellow";
           startLookTime = timestamp;

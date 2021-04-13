@@ -24,7 +24,7 @@ module.exports = function (io, socket) {
       io.sockets.to(roomId).emit("answer", uuid, msg, name);
     }
 
-    //io.sockets.to(roomId).emit("message1", msg, name);
+    io.sockets.to(roomId).emit("message1", msg, name);
   });
 
   // get concentrate data from students

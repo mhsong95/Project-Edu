@@ -40,7 +40,7 @@ module.exports = function (io, socket) {
       let sumConcent = 0;
       let sumTime = 0;
       for (let participant of room.participants) {
-        sumConcent = sumConcent + participant.concentSummary.avg;
+        sumConcent = sumConcent + participant.concentSummary.dataSum;
         sumTime =
           sumTime +
           participant.concentSummary.lastTime -
