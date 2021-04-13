@@ -37,13 +37,13 @@ module.exports = function (io, socket) {
 
     // Setup event listener on disconnection
     socket.on("disconnect", () => {
-      room.removeSupervisor(userId);
-
       console.log(`Supervisor ${userId} leaved room ${roomId}`);
+      room.removeSupervisor(userId);
     });
 
     // Join the socket to the room.
     socket.join(roomId);
+    console.log(`Supervisor ${userId} joined room ${roomId}`);
 
     // Insert new supervisor to the room data structure.
     let supervisor = new Supervisor(userId, socket, priority, capacity);

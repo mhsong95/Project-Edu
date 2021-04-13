@@ -29,6 +29,8 @@ module.exports = function (io, socket) {
     // Event listener on disconnection.
     socket.on("disconnect", () => {
       socket.broadcast.to(roomId).emit("participant-leaved", userId);
+      console.log(`Participant ${userId} leaved from room ${roomId}`);
+
       room.removeParticipant(userId);
     });
 
@@ -48,6 +50,7 @@ module.exports = function (io, socket) {
 
     // Broadcast that a new participant has joined.
     socket.broadcast.to(roomId).emit("participant-joined", userId, name);
+    console.log(`Participant ${userId} has joined room ${roomId}`);
 
     // Add the participant to the room data structure, 
     // then rearrange participants.
