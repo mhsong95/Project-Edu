@@ -1,5 +1,5 @@
 const socket = io("/", {
-  transports: [ "websocket" ],
+  transports: ["websocket"],
 }); // Force WebSocket transport to assure in-order arrival of events.
 
 const videoGrid = document.getElementById("video-grid");
@@ -23,19 +23,27 @@ const screenPeer = new Peer(undefined, {
   port: "8080",
 });
 
-let presenterId = ""; // ID as a presenter.
-let supervisorId = ""; // ID as a supervisor.
-let screenId = ""; // ID of the screen sharing peer.
-
 // Resolve IDs.
-presenterPeer.on("open", (id) => {
-  presenterId = id;
+// When you need ID of a peer, use
+/* 
+xxxIdPromise.then((id) => {
+  do_your_thing_with_id(id);
 });
-supervisorPeer.on("open", (id) => {
-  supervisorId = id;
+*/
+let presenterIdPromise = new Promise((resolve) => {
+  presenterPeer.on("open", (id) => {
+    resolve(id);
+  });
 });
-screenPeer.on("open", (id) => {
-  screenId = id;
+let supervisorIdPromise = new Promise((resolve) => {
+  supervisorPeer.on("open", (id) => {
+    resolve(id);
+  });
+});
+let screenIdPromise = new Promise((resolve) => {
+  screenPeer.on("open", (id) => {
+    resolve(id);
+  });
 });
 
 /* ####### Data structures ####### */
@@ -91,7 +99,9 @@ navigator.mediaDevices
     // Insert your video stream into the page.
     const myVideo = document.createElement("video");
     myVideo.muted = true;
-    addVideoStream(myVideo, stream, presenterId);
+    presenterIdPromise.then((presenterId) => {
+      addVideoStream(myVideo, stream, presenterId);
+    });
 
     /* ####### Presenter event listeners ####### */
 
@@ -171,13 +181,15 @@ navigator.mediaDevices
     });
 
     // Notify the server that you want to join the room.
-    socket.emit(
-      "presenter-connected",
-      ROOM_ID,
-      presenterId,
-      myName,
-      resolvePendingCalls
-    );
+    presenterIdPromise.then((presenterId) => {
+      socket.emit(
+        "presenter-connected",
+        ROOM_ID,
+        presenterId,
+        myName,
+        resolvePendingCalls
+      );
+    });
 
     // Callback sent to the server to receive the list of participants
     // and resolve the pending calls.
@@ -214,7 +226,9 @@ navigator.mediaDevices
     // When new assignment arrives, update the currentAssignment
     // and accept or decline possible pending calls.
     socket.on("new-assignment", (participants, time) => {
-      console.log(`New assignment: ${JSON.stringify(participants)}, ${Date(time)}`);
+      console.log(
+        `New assignment: ${JSON.stringify(participants)}, ${Date(time)}`
+      );
 
       let observees = supervisorPeer.observees;
       // Close any existing calls that are not in the new assignment
@@ -321,13 +335,9 @@ navigator.mediaDevices
     // Notify the server that the supervisor wants to join the room.
     // A presenter is by now also a supervisor
     // with lowest priority and infinite capacity.
-    socket.emit(
-      "supervisor-connected",
-      ROOM_ID,
-      supervisorId,
-      1000,
-      1000,
-    );
+    supervisorIdPromise.then((supervisorId) => {
+      socket.emit("supervisor-connected", ROOM_ID, supervisorId, 1000, 1000);
+    });
   });
 
 /* ####### Helper functions ####### */
@@ -390,7 +400,9 @@ function acceptOrDeclineCall(call, peer, stream) {
         }
         observees[call.peer].call = call;
       } else {
-        console.log(`Call from ${call.peer} to supervisor: rejected - not assigned`);
+        console.log(
+          `Call from ${call.peer} to supervisor: rejected - not assigned`
+        );
 
         call.close();
       }
@@ -404,7 +416,7 @@ function acceptOrDeclineCall(call, peer, stream) {
     console.log(`Here should not be reached!!!`);
     return;
   }
-  
+
   /* ##### Calls to presenterPeer & screenPeer ##### */
 
   // Reject the call if you cannot identify the caller.
@@ -524,7 +536,9 @@ function startScreenSharing() {
     };
 
     // Notify that screen sharing has started.
-    socket.emit("screenshare-started", ROOM_ID, screenId);
+    screenIdPromise.then((screenId) => {
+      socket.emit("screenshare-started", ROOM_ID, screenId);
+    });
     screenStream = stream;
 
     // Change the button name and the action on click.

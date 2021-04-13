@@ -15,10 +15,8 @@ const myPeer = new Peer(undefined, {
 });
 
 // Resolve Peer ID.
-let userId = "";
 let userIdPromise = new Promise((resolve) => {
   myPeer.on("open", (id) => {
-    userId = id;
     resolve(id);
   });
 });
@@ -308,7 +306,9 @@ socket.on("message1", function (msg, name) {
 // webgazer
 // store calibration
 function add_concentrate_log(t, level) {
-  send_data([userId, t, level]);
+  userIdPromise.then((userId) => {
+    send_data([userId, t, level]);
+  });
 }
 
 // Send concentration data to the supervisor and the server.
