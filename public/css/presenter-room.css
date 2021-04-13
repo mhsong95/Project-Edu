@@ -147,9 +147,12 @@ outline: none;
     list-style-type: none;
     word-wrap: break-word;
     white-space: pre-wrap;
-    margin: 0;
-    padding: 0;
-/*  position: absolute; */
+    position: absolute;
+    bottom: 5%;
+    right: 5%;
+    width: 100%;
+    height: 70%;
+    overflow-y: scroll;
 }
 
 #messages > li {
