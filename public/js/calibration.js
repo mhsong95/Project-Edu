@@ -44,6 +44,8 @@ function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+let send = false;
+
 /**
  * Load this function when the index page starts.
 * This function listens for button clicks on the html page
@@ -80,6 +82,7 @@ $(document).ready(function(){
         $("#calib").hide();
         $("#webgazerVideoContainer").hide();
         $("#main").show();
+        send = true;
         // webgazer.showPredictionPoints(false);
       }
     });
@@ -87,9 +90,10 @@ $(document).ready(function(){
 
 function skip(){
   $("#calib").hide();
-  $("#webgazerVideoContainer").hide();
+  // $("#webgazerVideoContainer").hide();
   $("#main").show();
-  // webgazer.showPredictionPoints(false);
+  webgazer.showVideoPreview(true).showPredictionPoints(true);
+  send = true;
 }
 
 window.onload = async function() {
@@ -129,18 +133,21 @@ window.onload = async function() {
           // videogrid.style.backgroundColor = "blue";
           startLookTime = Number.POSITIVE_INFINITY; // restart timer
           lookDirection = null;
-          add_concentrate_log(timestamp, 10);
+          if (send && (lookDirection !== null) ){
+            add_concentrate_log(timestamp, 10);
+          }
+          else console.log(send);
         } else if (lookDirection !== "RESET" && lookDirection === null) {
           // videogrid.style.backgroundColor = "yellow";
           startLookTime = timestamp;
           lookDirection = "OUT";
-          add_concentrate_log(timestamp, 5);
+          if (send) add_concentrate_log(timestamp, 5);
         }
 
         if (startLookTime + LOOK_DELAY < timestamp) {
           console.log(left, right, top, bottom);
           // videogrid.style.backgroundColor = "red";
-          add_concentrate_log(timestamp, 0);
+          if (send) add_concentrate_log(timestamp, 0);
 
           startLookTime = Number.POSITIVE_INFINITY;
           lookDirection = "STOP";
