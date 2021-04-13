@@ -71,13 +71,16 @@
   }
 
   #form {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 30px;
+    background: rgba(40, 167, 70, 0.5);
     padding: 0.25rem;
     display: flex;
     height: 3rem;
+    /* width: 100%; */
     box-sizing: border-box;
     backdrop-filter: blur(10px);
+    bottom: 1%;
+    border-radius: 0.5rem;
+    /* position: absolute; */
   }
 
   #input {
@@ -93,15 +96,15 @@
   }
 
   #form > button {
-    background: #333;
     border: none;
     padding: 0 1rem;
     margin: 0.25rem;
     border-radius: 3px;
     outline: none;
-    border-radius: 30px;
     color: #fff;
-  }
+    padding-right: 0.1rem;
+    padding-left: 0.1em;
+}
 
   #messages {
     list-style-type: none;
@@ -130,11 +133,11 @@
       margin: 10%;
   }
 
-  .btn{
+  /* .btn{
       position: relative;
       bottom: 5%;
       right: 5%;
-  }
+  } */
 
   .biginfo{
       position: absolute;
@@ -223,3 +226,41 @@
         bottom:2vw;
         right:2vw;
     }
+
+
+@media screen and (max-width: 1500px) and (min-width: 650px) {
+    #chatting {
+        position: absolute;
+        /* right: 0; */
+        bottom: 0;
+        width: 90%;
+        display: inline-block;
+        height: initial;
+        margin-bottom: 1rem;
+    }
+
+    #form {
+        height: 6rem;
+        display: inline-grid;
+    }
+
+    #input {
+        height: 3rem;
+    }
+}
+
+@media screen and (max-width: 950px) {
+    #form {
+        width: 100%;
+    }
+
+    #chatting {
+        position: absolute;
+        /* right: 0; */
+        bottom: 0;
+        width: 90%;
+        display: inline-block;
+        height: initial;
+        margin-bottom: 1rem;
+    }
+}

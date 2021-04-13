@@ -106,16 +106,16 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 
 
 #form {
-background: rgba(40, 167, 70, 0.5);
-padding: 0.25rem;
-display: flex;
-height: 3rem;
-/* width: 100%; */
-box-sizing: border-box;
-backdrop-filter: blur(10px);
-bottom: 1%;
-border-radius: 0.5rem;
-/* position: absolute; */
+    background: rgba(40, 167, 70, 0.5);
+    padding: 0.25rem;
+    display: flex;
+    height: 3rem;
+    /* width: 100%; */
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    bottom: 1%;
+    border-radius: 0.5rem;
+    /* position: absolute; */
 }
 
 #input {
@@ -144,12 +144,12 @@ outline: none;
 }
 
 #messages {
-list-style-type: none;
-word-wrap: break-word;
-white-space: pre-wrap;
-margin: 0;
-padding: 0;
-/* position: absolute; */
+    list-style-type: none;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    margin: 0;
+    padding: 0;
+    position: absolute;
 }
 
 #messages > li {
