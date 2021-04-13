@@ -112,6 +112,7 @@ window.onload = async function () {
   const LOOK_DELAY = 3000; // 3 second
 
   let startLookTime = Number.POSITIVE_INFINITY;
+  let lookTimeUpdate = Number.POSITIVE_INFINITY;
   let lookDirection = null;
 
   await webgazer
@@ -137,26 +138,33 @@ window.onload = async function () {
         // videogrid.style.backgroundColor = "blue";
         if (send && lookDirection !== null) {
           add_concentrate_log(timestamp, 10);
+          lookTimeUpdate = timestamp;
+        } else if (lookTimeUpdate + LOOK_DELAY < timestamp) {
+          add_concentrate_log(timestamp, 10);
+          lookTimeUpdate = timestamp;
         }
         startLookTime = Number.POSITIVE_INFINITY; // restart timer
         lookDirection = null;
-      } else if (lookDirection !== "RESET" && lookDirection === null) {
+      } else if (lookDirection === null) {
         // videogrid.style.backgroundColor = "yellow";
         startLookTime = timestamp;
+        lookTimeUpdate = timestamp;
         lookDirection = "OUT";
         if (send) add_concentrate_log(timestamp, 5);
-      }
-
-      if (startLookTime + LOOK_DELAY < timestamp) {
+      } else if (
+        startLookTime + LOOK_DELAY < timestamp ||
+        lookDirection == "RESET"
+      ) {
         console.log(left, right, top, bottom);
         // videogrid.style.backgroundColor = "red";
         if (send) add_concentrate_log(timestamp, 0);
 
         startLookTime = Number.POSITIVE_INFINITY;
+        lookTimeUpdate = timestamp;
         lookDirection = "STOP";
         setTimeout(() => {
           lookDirection = "RESET";
-        }, 200);
+        }, LOOK_DELAY);
       }
     })
     .begin();
