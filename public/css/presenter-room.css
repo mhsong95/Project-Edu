@@ -133,7 +133,7 @@ word-wrap: break-word;
 white-space: pre-wrap;
 margin: 0;
 padding: 0;
-position: absolute;
+/* position: absolute; */
 }
 
 #messages > li {
