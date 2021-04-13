@@ -77,7 +77,7 @@ Promise.all([
     audioStream.getAudioTracks()[0],
   ]);
   addVideoStream(my_cam, myStream);
-  
+
   // Add onclick event listener on the MUTE button.
   let button = document.getElementById("mute");
   button.onclick = (ev) => {
@@ -102,7 +102,16 @@ Promise.all([
     };
 
     // Call the presenter with your audio stream.
-    presenter.call = myPeer.call(presenterId, audioStream);
+    presenter.call = myPeer.call(presenterId, audioStream, {
+      constraints: {
+        mandatory: {
+          OfferToReceiveAudio: true,
+          OfferToReceiveVideo: true,
+        },
+        offerToReceiveAudio: 1,
+        offerToReceiveVideo: 1,
+      },
+    });
 
     // Attach the presenter's webcam stream to the video element.
     presenter.call.on("stream", (presenterStream) => {
