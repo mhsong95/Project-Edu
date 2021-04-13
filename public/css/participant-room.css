@@ -2,6 +2,23 @@
     margin-top: 15%;
   }
 
+  #see-parti{
+    position: absolute;
+    height: 3%;
+    width: 3%;
+    right: 0;
+  }
+
+  #partlist{
+    position: absolute;
+    height: 50%;
+    width: 16%;
+    top: 3%;
+    right: 0;
+    background-color: yellowgreen;
+    z-index: 11;
+  }
+
   #questions{
     position: absolute;
     bottom: 8%;

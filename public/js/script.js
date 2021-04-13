@@ -52,6 +52,12 @@ let emptyStream = new MediaStream([
 
 // Name of the participant.
 let myName = prompt("Enter your name", "anonymous");
+var det = document.getElementById("partlist");
+var cont = document.createElement("text");
+cont.textContent = myName;
+det.appendChild(cont);
+var newline = document.createElement("br");
+det.appendChild(newline);
 
 // Whether the participant is ready to make/accept calls.
 let isReady = false;
@@ -64,6 +70,12 @@ socket.on("get-ready", (pres, sups, parts) => {
 
   for (let part of parts) {
     participantDict[part.userId] = part.name;
+    var det = document.getElementById("partlist");
+    var cont = document.createElement("text");
+    cont.textContent = part.name;
+    det.appendChild(cont);
+    var newline = document.createElement("br");
+    det.appendChild(newline);
   }
   isReady = true;
 
@@ -79,6 +91,12 @@ socket.on("rejected", (msg) => {
 
 socket.on("participant-joined", (userId, name) => {
   participantDict[userId] = name;
+  var det = document.getElementById("partlist");
+  var cont = document.createElement("text");
+  cont.textContent = name;
+  det.appendChild(cont);
+  var newline = document.createElement("br");
+  det.appendChild(newline);
 });
 
 socket.on("supervisor-joined", (userId) => {
@@ -205,9 +223,6 @@ function addVideoStream(video, stream) {
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
-  //if (!screen) {
-  //  videoGrid.append(video);
-  //}
 }
 
 // Call a supervisor to provide the participant's stream.
@@ -321,6 +336,16 @@ function doupdate(uuid){
       var newline = document.createElement("br");
       det.appendChild(newline);
     }
+  }
+}
+
+function partilist(){
+  var e = document.getElementById("partlist");
+  if(e.style.display == "none"){
+    e.style.display = "block";
+  }
+  else{
+    e.style.display = "none";
   }
 }
 
