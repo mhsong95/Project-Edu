@@ -155,13 +155,34 @@ myPeer.on("open", (userId) => {
   socket.emit("supervisor-connected", ROOM_ID, userId, priority, capacity);
 });
 
-function addVideoStream(video, stream, video_id) {
+// Creates a div element that acts as a video container.
+function createVideoContainer() {
+  let container = document.createElement("div");
+  container.className = "video-container";
+  return container;
+}
+
+// Attach a media stream to a video container, then append it to
+// "video-grid" element in the document.
+function addVideoStream(container, stream, video_id, name) {
+  // Attach video stream into a new video element.
+  const video = document.createElement("video");
+  video.muted = true;
+
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
-  video.setAttribute("id", video_id);
-  videoGrid.append(video);
+  container.append(video);
+
+  // Attach overlayed name label.
+  const nameOverlay = document.createElement("p");
+  nameOverlay.className = "name-overlay";
+  nameOverlay.append(document.createTextNode(name));
+  container.append(nameOverlay);
+
+  container.setAttribute("id", video_id);
+  videoGrid.append(container);
 }
 
 // Answer or reject a call according to current assignment.
@@ -179,13 +200,18 @@ function acceptOrDeclineCall(call) {
 
       call.answer();
 
-      const video = document.createElement("video");
+      const container = createVideoContainer();
       call.on("stream", (userVideoStream) => {
-        addVideoStream(video, userVideoStream, call.peer);
+        addVideoStream(
+          container,
+          userVideoStream,
+          call.peer,
+          currentAssignment.participants[call.peer]
+        );
       });
 
       call.on("close", () => {
-        video.remove();
+        container.remove();
       });
 
       // Save the call in the 'observees' dictionary.

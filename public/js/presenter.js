@@ -97,10 +97,9 @@ navigator.mediaDevices
   })
   .then((stream) => {
     // Insert your video stream into the page.
-    const myVideo = document.createElement("video");
-    myVideo.muted = true;
+    const container = createVideoContainer();
     presenterIdPromise.then((presenterId) => {
-      addVideoStream(myVideo, stream, presenterId);
+      addVideoStream(container, stream, presenterId, myName, true);
     });
 
     /* ####### Presenter event listeners ####### */
@@ -385,13 +384,18 @@ function acceptOrDeclineCall(call, peer, stream) {
 
         call.answer();
 
-        const video = document.createElement("video");
+        const container = createVideoContainer();
         call.on("stream", (userVideoStream) => {
-          addVideoStream(video, userVideoStream, call.peer);
+          addVideoStream(
+            container,
+            userVideoStream,
+            call.peer,
+            currentAssignment.participants[call.peer]
+          );
         });
 
         call.on("close", () => {
-          video.remove();
+          container.remove();
         });
 
         // Save the call in the 'observees' dictionary.
@@ -434,7 +438,7 @@ function acceptOrDeclineCall(call, peer, stream) {
       // Insert audio stream of the participant into the page.
       const audio = document.createElement("audio");
       call.on("stream", (audioStream) => {
-        console.log(`Receiving audio stream from ${userId}`);
+        console.log(`Receiving audio stream from ${call.peer}`);
         addAudioStream(audio, audioStream, call.peer);
       });
 
@@ -553,16 +557,34 @@ function stopScreenSharing() {
   screenStream.getTracks().forEach((track) => track.stop());
 }
 
-// Attach a media stream to a video element, then append it to
+// Creates a div element that acts as a video container.
+function createVideoContainer() {
+  let container = document.createElement("div");
+  container.className = "video-container";
+  return container;
+}
+
+// Attach a media stream to a video container, then append it to
 // "video-grid" element in the document.
-function addVideoStream(video, stream, video_id) {
+function addVideoStream(container, stream, video_id, name) {
+  // Attach video stream into a new video element.
+  const video = document.createElement("video");
+  video.muted = true;
+
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
     video.play();
   });
+  container.append(video);
 
-  video.setAttribute("id", video_id);
-  videoGrid.append(video);
+  // Attach overlayed name label.
+  const nameOverlay = document.createElement("p");
+  nameOverlay.className = "name-overlay";
+  nameOverlay.append(document.createTextNode(name));
+  container.append(nameOverlay);
+
+  container.setAttribute("id", video_id);
+  videoGrid.append(container);
 }
 
 // Attach a media stream to an audio element, then append it to

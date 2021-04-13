@@ -54,9 +54,13 @@ module.exports = function (io, socket) {
       // Stop sending average concentration.
       clearInterval(update_concent);
 
+      // Broadcast that screensharing stopped, if it was ongoing.
+      if (room.presenter.screenId) {
+        room.presenter.screenId = null;
+        socket.broadcast.to(roomId).emit("screenshare-stopped");
+      }
       // Clear the presenter from the room's data structure and broadcast.
       room.presenter = null;
-      socket.broadcast.to(roomId).emit("screenshare-stopped");
       socket.broadcast.to(roomId).emit("presenter-leaved");
 
       console.log(`Presenter ${presenterId} leaved from room ${roomId}`);
