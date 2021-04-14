@@ -59,13 +59,23 @@ const emptyStream = new MediaStream([
 /* ####### socket.io data ####### */
 
 // Name of the participant.
-let myName = prompt("Enter your name", "anonymous");
+let myName;
+(function setName() {
+  myName = prompt("Enter your name");
+  if (!myName) {
+    alert("Please enter your name");
+    setName();
+  }
+})();
+
+/*
 var det = document.getElementById("partlist");
 var cont = document.createElement("text");
 cont.textContent = myName;
 det.appendChild(cont);
 var newline = document.createElement("br");
 det.appendChild(newline);
+*/
 
 // Whether the participant is ready to make/accept calls.
 let isReady = false;

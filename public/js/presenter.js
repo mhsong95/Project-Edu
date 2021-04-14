@@ -77,7 +77,15 @@ supervisorPeer.currentAssignment = null;
 /* ####### socket.io data ####### */
 
 // The name of this user.
-let myName = prompt("Enter your name", "anonymous");
+let myName;
+(function setName() {
+  myName = prompt("Enter your name");
+  if (!myName) {
+    alert("Please enter your name");
+    setName();
+  }
+})();
+
 // Whether the presenter is ready to make/accept calls.
 let isReady = false;
 // The stream of the shared screen. Set to null if not sharing screen.

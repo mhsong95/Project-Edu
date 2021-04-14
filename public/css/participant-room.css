@@ -79,6 +79,14 @@
     border-radius: 10px;
   }
 
+  #mute {
+    left: 0.5%;
+    bottom: 1%; 
+    width: 5%;
+    height: 5%;
+    position: absolute;
+  }
+
   /* chat style */
   body {
     margin: 0;
