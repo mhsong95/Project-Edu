@@ -625,10 +625,11 @@ form.addEventListener("submit", function (e) {
 // Receive message1 from server.js and add given msg to all client
 socket.on("message1", function (msg, name) {
   console.log("html socketon");
-  var item = document.createElement("li");
+  var item = document.createElement("div");
   item.textContent = `${name}: ${msg}`;
+  item.className = "message";
   messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
+  messages.scrollTop = messages.scrollHeight;
 });
 
 /* ######### concentrate graph ############ */
