@@ -80,6 +80,14 @@
     padding-right: 1rem;
 }
 
+  #mute {
+    left: 0.5%;
+    bottom: 1%; 
+    width: 5%;
+    height: 5%;
+    position: absolute;
+  }
+
   /* chat style */
   body {
     margin: 0;
