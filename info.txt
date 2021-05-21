@@ -7,3 +7,18 @@ peerjs --sslkey fake-keys/private.pem --sslcert fake-keys/private.crt --port 808
 
 
 border: 1px dashed #bcbcbc;
+
+
+      <div id="left">
+        <div id="screen-wrapper">
+          <video id="screen-video"></video>
+        </div>
+        <div id="menu-box">
+          <div id="audio-grid"></div>
+          <!-- <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-secondary">Left</button>
+            <button type="button" class="btn btn-secondary">Middle</button>
+            <button type="button" class="btn btn-secondary">Right</button>
+          </div> -->
+        </div>
+      </div>
