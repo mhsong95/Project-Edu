@@ -141,6 +141,17 @@ navigator.mediaDevices
       // Now you do not have to keep calls pending. You're ready.
       isReady = true;
     }
+
+    // Initiate Google Cloud STT transcription.
+    AudioStreamer.initRecording(
+      stream,
+      (data, userId) => {
+        console.log(`${names[userId]}: ${data}`);
+      },
+      (error) => {
+        console.error("Error when recording", error);
+      }
+    );
   });
 
 /* ####### Helper functions ####### */
@@ -229,17 +240,17 @@ function addVideoStream(container, stream, name, muted = false) {
 
 // chat
 const form = document.getElementById("form");
-const input = document.getElementById("input");
+const chatInput = document.getElementById("input");
 const messages = document.getElementById("messages");
 
 // If user click submit button, send input value to server socket.
 form.addEventListener("submit", function (e) {
   console.log("eventlistener!");
   e.preventDefault();
-  if (input.value) {
-    socket.emit("message", ROOM_ID, null, null, input.value, myName);
-    console.log("listener: " + input.value);
-    input.value = "";
+  if (chatInput.value) {
+    socket.emit("message", ROOM_ID, null, null, chatInput.value, myName);
+    console.log("listener: " + chatInput.value);
+    chatInput.value = "";
   }
 });
 

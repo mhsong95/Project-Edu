@@ -70,6 +70,9 @@ module.exports = function (io, socket) {
     // Join the socket to the room.
     socket.join(roomId);
 
+    // Add the participant to the room data structure,.
+    room.addParticipant(participant);
+
     // Give the list of participants through the callback.
     let participantNames = {};
     for (let part of room.participants) {
@@ -80,10 +83,5 @@ module.exports = function (io, socket) {
     // Broadcast that a new participant has joined.
     socket.broadcast.to(roomId).emit("participant-joined", userId, name);
     console.log(`Participant ${userId} has joined room ${roomId}`);
-
-    // Add the participant to the room data structure,.
-    room.addParticipant(participant);
-
-    console.log(room);
   });
 };

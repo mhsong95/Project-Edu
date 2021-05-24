@@ -63,10 +63,14 @@ app.use("/room", roomRouter);
 // Require socket event handlers.
 const registerParticipantHandler = require("./handlers/participantHandler");
 const registerServerHandler = require("./handlers/serverHandler");
+const registerSpeechHandler = require("./handlers/speechHandler");
+const registerRoomHandler = require("./handlers/roomHandler");
 
+registerRoomHandler(io);
 io.on("connection", (socket) => {
   registerParticipantHandler(io, socket);
   registerServerHandler(io, socket);
+  registerSpeechHandler(io, socket);
 });
 
 // catch 404 and forward to error handler
