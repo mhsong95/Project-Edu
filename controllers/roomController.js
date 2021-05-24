@@ -43,7 +43,7 @@ module.exports = {
         return;
       }
 
-      // Otherwise, create the room. NOTE: The room is not yet opened.
+      // Otherwise, create the room. NOTE: The room is not yet open.
       // This is the only place where a new room ID is generated.
       let roomId = uuidV4();
       let room = new Room(roomId, req.body.room_name, req.body.passcode);
@@ -52,16 +52,16 @@ module.exports = {
       rooms[roomId] = room;
       setPrivileged(req.session, roomId);
 
-      // Redirect to presenter page.
+      // Redirect to host page.
       res.render("redirect", {
         msg: `Created Room: ${room.name}`,
-        url: `${roomId}/presenter`,
+        url: `${roomId}/host`,
       });
     },
   ],
 
-  // Display room for a presenter after checking authorization.
-  room_presenter_get: function (req, res, next) {
+  // Display room for a host after checking authorization.
+  room_host_get: function (req, res, next) {
     let roomId = req.params.room_id; // The room ID from URL.
     let room = rooms[roomId];
 
@@ -76,7 +76,7 @@ module.exports = {
       // Check if the user is privileged to the room.
       // If not, redirecto to room joining page.
       res.render("redirect", {
-        msg: "You are not authorized as a presenter",
+        msg: "You are not authorized as a host",
         url: `../${roomId}`,
       });
     } else {
@@ -90,7 +90,7 @@ module.exports = {
     let roomId = req.params.room_id; // The room ID from URL.
     let room = rooms[roomId];
 
-    // Check if there is such room (that is open).
+    // Check if there is such room that is open.
     if (!room?.isOpen) {
       // If no such room, redirect to room creation page.
       res.render("redirect", {
@@ -104,6 +104,7 @@ module.exports = {
   },
 
   // Handle POST request to join a room as a supervisor.
+  /*
   room_join_post: [
     // Validate and sanitize the inputs in the form.
     body("passcode")
@@ -155,37 +156,14 @@ module.exports = {
       }
     },
   ],
-
-  // Display supervisor room page.
-  room_supervisor_get: function (req, res, next) {
-    let roomId = req.params.room_id; // Room ID from URL.
-    let room = rooms[roomId];
-
-    // Check if there is the room (that is open).
-    if (!room?.isOpen) {
-      // If no such room, redirect to room creation page.
-      res.render("redirect", {
-        msg: "No such room",
-        url: "../create",
-      });
-    } else if (!isPrivileged(req.session, roomId)) {
-      // Redirect to room joining page if the user is not privileged.
-      res.render("redirect", {
-        msg: "You are not authorized as a supervisor",
-        url: `../${roomId}`,
-      });
-    } else {
-      // Render the supervisor page otherwise.
-      res.render("supervisor-room", { room_id: roomId, room_name: room.name });
-    }
-  },
+  */
 
   // Display the room page for a normal participant.
   room_participant_get: function (req, res, next) {
     let roomId = req.params.room_id; // Room ID from URL.
     let room = rooms[roomId];
 
-    // Check if there is the room (that is open).
+    // Check if there is the room that is open.
     if (!room?.isOpen) {
       // If no such room, redirect to room creation page.
       res.render("redirect", {
@@ -194,7 +172,7 @@ module.exports = {
       });
     } else {
       // Otherwise render the room for participants.
-      res.render("room", { room_id: roomId, room_name: room.name });
+      res.render("presenter-room", { room_id: roomId, room_name: room.name });
     }
   },
 };

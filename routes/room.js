@@ -21,17 +21,14 @@ router.get("/create", room_controller.room_create_get);
 // POST request for creating a room.
 router.post("/create", room_controller.room_create_post);
 
-// GET request for entering a room as a presenter.
-router.get("/:room_id/presenter", room_controller.room_presenter_get);
+// GET request for entering a room as a host.
+router.get("/:room_id/host", room_controller.room_host_get);
 
 // GET request for joining a room.
 router.get("/:room_id", room_controller.room_join_get);
 
-// POST request for authorizing a user as a supervisor for a room.
-router.post("/:room_id", room_controller.room_join_post);
-
-// GET request for entering a room as a supervisor.
-router.get("/:room_id/supervisor", room_controller.room_supervisor_get);
+// POST request for authorizing a user as a host.
+// router.post("/:room_id", room_controller.room_join_post);
 
 // GET request for entering a room as a normal participant.
 router.get("/:room_id/participant", room_controller.room_participant_get);

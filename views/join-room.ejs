@@ -14,17 +14,22 @@
 		<h1>Join Room</h1>
 		<form method="POST">
 			<input type="text" name="room_name" id="room_name" value="<%= room_name %>" readonly />
+			<!--
 			<div id="passcode-fields" style="display:none">
 				<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" required />
 				<input type="submit" value="Join as a supervisor" />
 				<button id="cancel-passcode" onclick="hidePasscodeFields()">Cancel</button>
 			</div>
+			-->
 		</form>
 		<div id="join-buttons">
 			<button id="join-button" onclick="window.location.href += '/participant';">Join</button>
+			<!--
 			<button id="join-supervisor-button" onclick="showPasscodeFields()">Supervisor Mode</button>
+			-->
 		</div>
 	</div>
+	<!--
 	<script>
 		let joinButtons = document.getElementById("join-buttons");
 		let passcodeFields = document.getElementById("passcode-fields");
@@ -39,6 +44,7 @@
 			joinButtons.style.display = "";
 		}
 	</script>
+	-->
 	<% if (error) { %>
 		<!-- Alert the error message if joining failed (due to wrong passcode) -->
 		<script>alert("<%= error.msg %>")</script>

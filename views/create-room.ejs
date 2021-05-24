@@ -11,9 +11,6 @@
 
 <body>
 	<div class="enter-passcode-form">
-		<div style="margin: 25%">
-			<div id="video-grid"></div>
-		</div>
 		<h1>Create New Room</h1>
 		<form method="POST">
 			<label for="room_name">Room name </label>
@@ -21,7 +18,6 @@
 			<label for="passcode">Passcode</label>
 			<input type="text" name="passcode" id="passcode" placeholder="PASSCODE" value="<%= passcode %>" required />
 			<input type="submit" value="CREATE" />
-			<p>You can join the room as a <b>supervisor</b> using this passcode.</p>
 		</form>
 	</div>
 	<% if (error) { %>

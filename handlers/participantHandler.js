@@ -5,7 +5,10 @@ const { Server, Socket } = require("socket.io");
 
 // Require database and models for Room and Participant.
 const rooms = require("../db");
-const { Participant, Room } = require("../models/room");
+const { User, Room } = require("../models/room");
+
+// Session handlers.
+const { isPrivileged } = require("../library/library");
 
 /**
  * Registers event handlers on participant's socket.
@@ -18,43 +21,69 @@ module.exports = function (io, socket) {
   // When a participant wants to join a room.
   socket.on("participant-connected", (roomId, userId, name, callback) => {
     let room = rooms[roomId];
+    let participant;
 
-    // Check if there is a room.
-    if (!room?.isOpen) {
+    if (!room) {
+      // There is no room with the given ID. Reject connection.
       socket.emit("rejected", "Room not found");
       socket.disconnect(true);
       return;
+    } else if (!room.isOpen) {
+      // Room is being created. Create a new room 
+      // after checking if the session is privileged to create a room.
+      if (!isPrivileged(socket.request.session, roomId)) {
+        socket.emit("rejected", "Not authorized for the room")
+        socket.disconnect(true);
+        return;
+      }
+
+      // Mark the socket as a host,
+      participant = new User(userId, socket, name);
+      room.host = participant;
+      socket.isHost = true;
+
+      // then open the room.
+      room.isOpen = true;
+    } else {
+      participant = new User(userId, socket, name);
+
+      if (room.host === null && isPrivileged(socket.request.session, roomId)) {
+        // If the session is privileged to a open room, the socket is now a new host.
+        room.host = participant;
+        socket.isHost = true;
+      }
     }
 
     // Event listener on disconnection.
     socket.on("disconnect", () => {
-      socket.broadcast.to(roomId).emit("participant-leaved", userId);
       console.log(`Participant ${userId} leaved from room ${roomId}`);
 
+      socket.broadcast.to(roomId).emit("participant-leaved", userId);
       room.removeParticipant(userId);
+
+      if (socket.isHost) {
+        // Special treatment when the disconnected user is a host.
+        room.host = null;
+      }
     });
 
     // Join the socket to the room.
     socket.join(roomId);
 
-    // Give the presenter's information so that he/she can accept calls.
-    let presenterInfo = null;
-    if (room.presenter) {
-      presenterInfo = {
-        presenterId: room.presenter.userId,
-        screenId: room.presenter.screenId,
-        name: room.presenter.name,
-      };
+    // Give the list of participants through the callback.
+    let participantNames = {};
+    for (let part of room.participants) {
+      participantNames[part.userId] = part.name;
     }
-    callback(presenterInfo);
+    callback(participantNames);
 
     // Broadcast that a new participant has joined.
     socket.broadcast.to(roomId).emit("participant-joined", userId, name);
     console.log(`Participant ${userId} has joined room ${roomId}`);
 
-    // Add the participant to the room data structure, 
-    // then rearrange participants.
-    let participant = new Participant(userId, socket, name);
+    // Add the participant to the room data structure,.
     room.addParticipant(participant);
+
+    console.log(room);
   });
 };
