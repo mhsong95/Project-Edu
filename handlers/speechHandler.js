@@ -57,6 +57,8 @@ module.exports = function (io, socket) {
   function startRecognitionStream(socket, roomId, userId) {
     console.log(`Recognition starting for room ${roomId} by ${userId}`);
 
+    let room = rooms[roomId];
+
     socket.recognizeStream = speechClient
       .streamingRecognize(request)
       .on("error", (err) => {
@@ -66,31 +68,53 @@ module.exports = function (io, socket) {
             (err && err.details ? err.details : "")
         );
         socket.emit("googleCloudStreamError", err);
+
+        // Restart recognition stream on errors.
         stopRecognitionStream(socket);
+        startRecognitionStream(socket, roomId, userId);
       })
       .on("data", (data) => {
         if (data.results[0]?.alternatives[0]) {
+          let transcript = data.results[0].alternatives[0].transcript;
+
+          if (room.lastSpeaker !== userId) {
+            // TODO: Consume room.lastParagraph
+            // CAUTIOUS: room.lastSpeaker can be null.
+
+            room.lastSpeaker = userId;
+            room.lastParagraph = transcript;
+          } else {
+            room.lastParagraph += transcript;
+          }
+
+          room.speakTimeout = setTimeout(() => {
+            // TODO: Consume room.lastParagraph
+
+            room.lastSpeaker = null;
+            room.lastParagraph = null;
+          }, 15000);
+
           io.sockets
             .to(roomId)
-            .emit("speechData", data.results[0].alternatives[0].transcript, userId);
+            .emit(
+              "speechData",
+              data.results[0].alternatives[0].transcript,
+              userId
+            );
 
-          console.log(`${userId}: ${data.results[0].alternatives[0].transcript}`);
-        } else {
-          // if end of utterance, let's restart stream
-          // this is a small hack. After 65 seconds of silence, the stream will still throw an error for speech length limit
-          stopRecognitionStream(socket);
-          startRecognitionStream(socket, roomId, userId);
+          console.log(
+            `${userId}: ${data.results[0].alternatives[0].transcript}`
+          );
         }
 
-        /*
         // if end of utterance, let's restart stream
-        // this is a small hack. After 65 seconds of silence, the stream will still throw an error for speech length limit
+        // this is a small hack. After 65 seconds of silence,
+        // the stream will still throw an error for speech length limit
         if (data.results[0] && data.results[0].isFinal) {
           stopRecognitionStream(roomId);
-          startRecognitionStream(roomId);
+          startRecognitionStream(socket, roomId, userId);
           // console.log('restarted stream serverside');
         }
-        */
       });
   }
 

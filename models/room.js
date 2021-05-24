@@ -20,10 +20,14 @@ class Room {
     this.passcode = passcode;
 
     this.isOpen = false;  // Whether the room is open.
-    this.isTranscribing = false;  // Whether the transcription is ongoing.
+    // this.isTranscribing = false;  // Whether the transcription is ongoing.
 
     this.host = null; // The host (creator) of the room.
     this.participants = []; // List of participants.
+
+    this.lastSpeaker = null;
+    this.speakTimeout = null;
+    this.lastParagraph = "";
   }
 
   getParticipant(userId) {
