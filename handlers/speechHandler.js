@@ -7,7 +7,7 @@ const speech = require("@google-cloud/speech");
 
 // Create a client.
 const projectId = "ai-moderator-1621563494698";
-const keyFilename = "../../ai-moderator-1fa097a2d18f.json";
+const keyFilename = "../ai-moderator-1fa097a2d18f.json";
 const speechClient = new speech.SpeechClient({ projectId, keyFilename });
 
 // Options for speech recognition.
