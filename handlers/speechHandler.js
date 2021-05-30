@@ -212,11 +212,9 @@ module.exports = function (io, socket) {
     lastAudioInput = audioInput;
 
     restartCounter++;
-
     console.log(`${streamingLimit * restartCounter}: RESTARTING REQUEST`);
 
     newStream = true;
-
     startStream(roomId, userId);
   }
 
