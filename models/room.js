@@ -28,6 +28,7 @@ class Room {
     this.lastSpeaker = null;
     this.speakTimeout = null;
     this.lastParagraph = "";
+    this.paragraphTimestamp = 0;
   }
 
   getParticipant(userId) {

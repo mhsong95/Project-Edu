@@ -98,35 +98,46 @@ module.exports = function (io, socket) {
     // The transcription from the current API result.
     let transcript = "";
     if (stream.results[0]?.alternatives[0]) {
-      transcript = stream.results[0].alternatives[0].transcript;
+      transcript = stream.results[0].alternatives[0].transcript.trim();
     }
 
     if (stream.results[0]?.isFinal) {
-      console.log(`${correctedTime}(${userId}): ${transcript}`);
+      // console.log(`${correctedTime}(${userId}): ${transcript}`);
 
-      // Accumulate the paragraph so that we can 'summarize' it.
+      // When speaker changes, a new paragraph starts,
+      // and last paragraph is consumed for summarization.
       if (room.lastSpeaker !== userId) {
         // TODO: Consume room.lastParagraph
         // CAUTION: room.lastSpeaker can be null.
 
         room.lastSpeaker = userId;
         room.lastParagraph = transcript;
+        // paragraphTimestamp also acts as an ID to identify paragraphs.
+        room.paragraphTimestamp = Date.now();
       } else {
-        room.lastParagraph += transcript;
+        // Otherwise the transcript is accumulated to previous paragraph.
+        room.lastParagraph += (" " + transcript);
       }
 
-      // When speaker changes or 15 seconds elapses since last transcript,
-      // lastParagraph is sent for summarization.
+      console.log(`${room.paragraphTimestamp}: ${room.lastParagraph}`);
+
+      // Paragraph also changes after 10 seconds since last speech.
+      if (room.speakTimeout) {
+        clearInterval(room.speakTimeout);
+      }
       room.speakTimeout = setTimeout(() => {
         // TODO: consume room.lastParagraph
         // CAUTION: room.lastSpeaker can be null.
 
         room.lastSpeaker = null;
-        room.lastParagraph = null;
-      }, 15000);
+        room.lastParagraph = "";
+        room.speakTimeout = null;
+      }, 10000);
 
       // Broadcast the transcript to the room.
-      io.sockets.to(roomId).emit("speechData", transcript, userId);
+      io.sockets
+        .to(roomId)
+        .emit("speechData", transcript, userId, room.paragraphTimestamp);
 
       isFinalEndTime = resultEndTime;
       lastTranscriptWasFinal = true;
