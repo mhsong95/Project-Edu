@@ -47,7 +47,7 @@ let AudioStreamer = {
         onError("error");
       }
       // We don't want to emit another end stream event
-      // closeAll();
+      closeAll();
     });
   },
 
