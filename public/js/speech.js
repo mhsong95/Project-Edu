@@ -6,21 +6,7 @@ let bufferSize = 2048,
   input,
   globalStream;
 
-/*
-// Google Cloud STT request.
-const request = {
-  config: {
-    encoding: "LINEAR16",
-    sampleRateHertz: 16000,
-    languageCode: "en-US",
-    profanityFilter: false,
-    enableWordTimeOffsets: true,
-  },
-  interimResults: true, // If you want interim results, set this to true
-};
-*/
-
-var AudioStreamer = {
+let AudioStreamer = {
   /**
    * @param {MediaStream} stream The media stream to send to the server
    * @param {function} onData Callback to run on data each time it's received

@@ -14,6 +14,10 @@ const rooms = require("../db");
 module.exports = function (io) {
   io.of("/").adapter.on("delete-room", (roomId) => {
     if (rooms[roomId]) {
+      if (rooms[roomId].speakTimeout) {
+        // Clear timer for last paragraph, if it exists.
+        clearTimeout(rooms[roomId].speakTimeout);
+      }
       delete rooms[roomId];
     }
   });
