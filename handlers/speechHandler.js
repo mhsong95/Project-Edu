@@ -102,7 +102,7 @@ module.exports = function (io, socket) {
     }
 
     if (stream.results[0]?.isFinal) {
-      // console.log(`${correctedTime}(${userId}): ${transcript}`);
+      console.log(`${correctedTime}(${userId}): ${transcript}`);
 
       // When speaker changes, a new paragraph starts,
       // and last paragraph is consumed for summarization.
@@ -118,8 +118,6 @@ module.exports = function (io, socket) {
         // Otherwise the transcript is accumulated to previous paragraph.
         room.lastParagraph += (" " + transcript);
       }
-
-      console.log(`${room.paragraphTimestamp}: ${room.lastParagraph}`);
 
       // Paragraph also changes after 10 seconds since last speech.
       if (room.speakTimeout) {

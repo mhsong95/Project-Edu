@@ -145,8 +145,8 @@ navigator.mediaDevices
     // Initiate Google Cloud STT transcription.
     AudioStreamer.initRecording(
       stream,
-      (data, userId) => {
-        console.log(`${names[userId]}: ${data}`);
+      (transcript, userId, paragraphTimestamp) => {
+        console.log(`${names[userId]}(${paragraphTimestamp}): ${transcript}`);
       },
       (error) => {
         console.error("Error when recording", error);
