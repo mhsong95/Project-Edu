@@ -2,6 +2,9 @@ const { Server, Socket } = require("socket.io");
 
 const rooms = require("../db.js");
 
+// Interface between audio input and recognizeStream.
+const { Writable } = require("stream");
+
 // Import Google Cloud client library.
 const speech = require("@google-cloud/speech");
 
@@ -10,121 +13,219 @@ const projectId = "ai-moderator-1621563494698";
 const keyFilename = "../ai-moderator-1fa097a2d18f.json";
 const speechClient = new speech.SpeechClient({ projectId, keyFilename });
 
-// Options for speech recognition.
-const request = {
-  config: {
-    encoding: "LINEAR16",
-    sampleRateHertz: 16000,
-    languageCode: "en-US",
-    profinityFilter: false,
-    enableWordTimeOffsets: true,
-    /*
-    speechContexts: [{
-      phrases: ["hoful","shwazil"]
-    }], // add your own speech context for better recognition
-    */
-  },
-  interimResults: false, // If you want interim results, set this to true
-};
-
 /**
  * Register event handlers for speech recognition.
  * @param {Server} io
  * @param {Socket} socket
  */
 module.exports = function (io, socket) {
-  socket.on("startGoogleCloudStream", (roomId, userId) => {
-    startRecognitionStream(socket, roomId, userId);
+  // Options for speech recognition.
+  const request = {
+    config: {
+      encoding: "LINEAR16",
+      sampleRateHertz: 16000,
+      languageCode: "en-US",
+      enableAutomaticPunctuation: true, // Automatic punctuation
+      /*
+      speechContexts: [
+        {
+          phrases: ["hoful", "shwazil"],
+        },
+      ], // add your own speech context for better recognition
+      */
+    },
+    interimResults: false, // If you want interim results, set this to true
+  };
+
+  // Variables for maintaining infinite stream of recognition.
+  const streamingLimit = 290000; // streaming limit in ms. (~5 minutes)
+  let recognizeStream = null;
+  let restartCounter = 0;
+  let audioInput = [];
+  let lastAudioInput = [];
+  let resultEndTime = 0;
+  let isFinalEndTime = 0;
+  let finalRequestEndTime = 0;
+  let newStream = true;
+  let bridgingOffset = 0;
+  let lastTranscriptWasFinal = false;
+
+  // Starts a new speech recognition stream on a room.
+  function startStream(roomId, userId) {
+    console.log(`Recognition starting by ${userId} in room ${roomId}.`);
+
+    // Clear current audioInput
+    audioInput = [];
+    // Initiate (Reinitiate) a recognize stream
+    recognizeStream = speechClient
+      .streamingRecognize(request)
+      .on("error", (err) => {
+        if (err.code === 11) {
+          // When streaming limit is exceeded, just restart stream.
+          restartStream(roomId, userId);
+        } else {
+          console.error(
+            "Error when processing audio: " +
+              (err && err.code ? "Code: " + err.code + " " : "") +
+              (err && err.details ? err.details : "")
+          );
+          socket.emit("recognitionError", err);
+        }
+      })
+      .on("data", (stream) => {
+        speechCallback(stream, roomId, userId);
+      });
+
+    // Restart stream when streamingLimit expires
+    setTimeout(() => {
+      restartStream(roomId, userId);
+    }, streamingLimit);
+  }
+
+  // Callback that is called whenever data arrives from recognizeStream.
+  const speechCallback = (stream, roomId, userId) => {
+    let room = rooms[roomId];
+
+    // Convert API result end time from seconds + nanoseconds to milliseconds
+    resultEndTime =
+      stream.results[0].resultEndTime.seconds * 1000 +
+      Math.round(stream.results[0].resultEndTime.nanos / 1000000);
+
+    // Calculate correct time based on offset from audio sent twice
+    const correctedTime =
+      resultEndTime - bridgingOffset + streamingLimit * restartCounter;
+
+    // The transcription from the current API result.
+    let transcript = "";
+    if (stream.results[0]?.alternatives[0]) {
+      transcript = stream.results[0].alternatives[0].transcript;
+    }
+
+    if (stream.results[0]?.isFinal) {
+      console.log(`${correctedTime}(${userId}): ${transcript}`);
+
+      // Accumulate the paragraph so that we can 'summarize' it.
+      if (room.lastSpeaker !== userId) {
+        // TODO: Consume room.lastParagraph
+        // CAUTION: room.lastSpeaker can be null.
+
+        room.lastSpeaker = userId;
+        room.lastParagraph = transcript;
+      } else {
+        room.lastParagraph += transcript;
+      }
+
+      // When speaker changes or 15 seconds elapses since last transcript,
+      // lastParagraph is sent for summarization.
+      room.speakTimeout = setTimeout(() => {
+        // TODO: consume room.lastParagraph
+        // CAUTION: room.lastSpeaker can be null.
+
+        room.lastSpeaker = null;
+        room.lastParagraph = null;
+      }, 15000);
+
+      // Broadcast the transcript to the room.
+      io.sockets.to(roomId).emit("speechData", transcript, userId);
+
+      isFinalEndTime = resultEndTime;
+      lastTranscriptWasFinal = true;
+    } else {
+      lastTranscriptWasFinal = false;
+    }
+  };
+
+  // Interface between input audio stream and recognizeStream.
+  // It lets us re-send un-answered audio input on restarts.
+  const audioInputStreamTransform = new Writable({
+    write(chunk, encoding, next) {
+      // Re-send audio input chunks when recognizeStream restarts.
+      if (newStream && lastAudioInput.length !== 0) {
+        // Approximate math to calculate time of chunks
+        const chunkTime = streamingLimit / lastAudioInput.length;
+        if (chunkTime !== 0) {
+          if (bridgingOffset < 0) {
+            bridgingOffset = 0;
+          }
+          if (bridgingOffset > finalRequestEndTime) {
+            bridgingOffset = finalRequestEndTime;
+          }
+          const chunksFromMS = Math.floor(
+            (finalRequestEndTime - bridgingOffset) / chunkTime
+          );
+          bridgingOffset = Math.floor(
+            (lastAudioInput.length - chunksFromMS) * chunkTime
+          );
+
+          for (let i = chunksFromMS; i < lastAudioInput.length; i++) {
+            recognizeStream.write(lastAudioInput[i]);
+          }
+        }
+        newStream = false;
+      }
+
+      // Store audio input for next restart.
+      audioInput.push(chunk);
+
+      if (recognizeStream) {
+        recognizeStream.write(chunk);
+      }
+
+      next();
+    },
+
+    final() {
+      if (recognizeStream) {
+        recognizeStream.end();
+      }
+    },
+  });
+
+  // Closes recognizeStream
+  function stopStream() {
+    if (recognizeStream) {
+      recognizeStream.end();
+      recognizeStream.removeAllListeners("data");
+      recognizeStream = null;
+    }
+  }
+
+  // Restarts recognizeStream
+  function restartStream(roomId, userId) {
+    stopStream();
+
+    if (resultEndTime > 0) {
+      finalRequestEndTime = isFinalEndTime;
+    }
+    resultEndTime = 0;
+
+    lastAudioInput = [];
+    lastAudioInput = audioInput;
+
+    restartCounter++;
+
+    console.log(`${streamingLimit * restartCounter}: RESTARTING REQUEST`);
+
+    newStream = true;
+
+    startStream(roomId, userId);
+  }
+
+  /* ##### socket event listeners ##### */
+
+  socket.on("startRecognitionStream", (roomId, userId) => {
+    startStream(roomId, userId);
   });
 
   socket.on("binaryAudioData", (data) => {
-    if (socket.recognizeStream) {
-      socket.recognizeStream.write(data);
-    }
+    audioInputStreamTransform.write(data);
   });
 
-  socket.on("endGoogleCloudStream", () => {
-    stopRecognitionStream(socket);
+  socket.on("endRecognitionStream", () => {
+    stopStream();
   });
 
   socket.on("disconnect", () => {
-    stopRecognitionStream(socket);
+    stopStream();
   });
-
-  /**
-   * Starts a new speech recognition stream on a room.
-   */
-  function startRecognitionStream(socket, roomId, userId) {
-    console.log(`Recognition starting for room ${roomId} by ${userId}`);
-
-    let room = rooms[roomId];
-
-    socket.recognizeStream = speechClient
-      .streamingRecognize(request)
-      .on("error", (err) => {
-        console.error(
-          "Error when processing audio: " +
-            (err && err.code ? "Code: " + err.code + " " : "") +
-            (err && err.details ? err.details : "")
-        );
-        socket.emit("googleCloudStreamError", err);
-
-        // Restart recognition stream on errors.
-        stopRecognitionStream(socket);
-        startRecognitionStream(socket, roomId, userId);
-      })
-      .on("data", (data) => {
-        if (data.results[0]?.alternatives[0]) {
-          let transcript = data.results[0].alternatives[0].transcript;
-
-          if (room.lastSpeaker !== userId) {
-            // TODO: Consume room.lastParagraph
-            // CAUTIOUS: room.lastSpeaker can be null.
-
-            room.lastSpeaker = userId;
-            room.lastParagraph = transcript;
-          } else {
-            room.lastParagraph += transcript;
-          }
-
-          room.speakTimeout = setTimeout(() => {
-            // TODO: Consume room.lastParagraph
-
-            room.lastSpeaker = null;
-            room.lastParagraph = null;
-          }, 15000);
-
-          io.sockets
-            .to(roomId)
-            .emit(
-              "speechData",
-              data.results[0].alternatives[0].transcript,
-              userId
-            );
-
-          console.log(
-            `${userId}: ${data.results[0].alternatives[0].transcript}`
-          );
-        }
-
-        // if end of utterance, let's restart stream
-        // this is a small hack. After 65 seconds of silence,
-        // the stream will still throw an error for speech length limit
-        if (data.results[0] && data.results[0].isFinal) {
-          stopRecognitionStream(roomId);
-          startRecognitionStream(socket, roomId, userId);
-          // console.log('restarted stream serverside');
-        }
-      });
-  }
-
-  /**
-   * Closes the recognize stream and wipes it
-   */
-  function stopRecognitionStream(socket) {
-    if (socket.recognizeStream) {
-      socket.recognizeStream.end();
-    }
-    socket.recognizeStream = null;
-  }
 };

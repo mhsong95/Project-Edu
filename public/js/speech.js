@@ -28,7 +28,7 @@ var AudioStreamer = {
    */
   initRecording: function (stream, onData, onError) {
     userIdPromise.then((userId) => {
-      socket.emit("startGoogleCloudStream", ROOM_ID, userId);
+      socket.emit("startRecognitionStream", ROOM_ID, userId);
     });
 
     AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -56,7 +56,7 @@ var AudioStreamer = {
       });
     }
 
-    socket.on("googleCloudStreamError", (error) => {
+    socket.on("recognitionError", (error) => {
       if (onError) {
         onError("error");
       }
@@ -66,7 +66,7 @@ var AudioStreamer = {
   },
 
   stopRecording: function () {
-    socket.emit("endGoogleCloudStream", "");
+    socket.emit("endRecognitionStream", "");
     closeAll();
   },
 };
@@ -85,7 +85,7 @@ function microphoneProcess(e) {
 
 /**
  * Converts a buffer from float32 to int16. Necessary for streaming.
- * sampleRateHertz of 1600.
+ * sampleRateHertz of 16000.
  *
  * @param {object} buffer Buffer being converted
  */
@@ -107,7 +107,7 @@ function convertFloat32ToInt16(buffer) {
 function closeAll() {
   // Clear the listeners (prevents issue if opening and closing repeatedly)
   socket.off("speechData");
-  socket.off("googleCloudStreamError");
+  socket.off("recognitionError");
   /*
   let tracks = globalStream ? globalStream.getTracks() : null;
   let track = tracks ? tracks[0] : null;
