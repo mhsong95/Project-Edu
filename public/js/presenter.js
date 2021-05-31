@@ -141,9 +141,14 @@ navigator.mediaDevices
       // Now you do not have to keep calls pending. You're ready.
       isReady = true;
 
-      // Attach event listeners on transcription and summary data arrival.
-      socket.on("speechData", (transcript, userId, paragraphTimestamp) => {
+      // Attach event listeners on transcription data arrival.
+      socket.on("transcript", (transcript, userId, paragraphTimestamp) => {
         onTranscript(names, transcript, userId, paragraphTimestamp);
+      });
+
+      // Attach event listeners on summary data arrival.
+      socket.on("summary", (summary, confidence, userId, paragraphTimestamp) => {
+        onSummary(names, summary, confidence, userId, paragraphTimestamp);
       });
     }
 

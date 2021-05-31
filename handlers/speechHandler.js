@@ -107,8 +107,14 @@ module.exports = function (io, socket) {
       // When speaker changes, a new paragraph starts,
       // and last paragraph is consumed for summarization.
       if (room.lastSpeaker !== userId) {
-        // TODO: Consume room.lastParagraph
-        // CAUTION: room.lastSpeaker can be null.
+        if (room.lastSpeaker) {
+          requestSummary(
+            room.lastParagraph,
+            roomId,
+            room.lastSpeaker,
+            room.paragraphTimestamp
+          );
+        }
 
         room.lastSpeaker = userId;
         room.lastParagraph = transcript;
@@ -116,7 +122,7 @@ module.exports = function (io, socket) {
         room.paragraphTimestamp = Date.now();
       } else {
         // Otherwise the transcript is accumulated to previous paragraph.
-        room.lastParagraph += (" " + transcript);
+        room.lastParagraph += " " + transcript;
       }
 
       // Paragraph also changes after 10 seconds since last speech.
@@ -124,8 +130,14 @@ module.exports = function (io, socket) {
         clearInterval(room.speakTimeout);
       }
       room.speakTimeout = setTimeout(() => {
-        // TODO: consume room.lastParagraph
-        // CAUTION: room.lastSpeaker can be null.
+        if (room.lastSpeaker) {
+          requestSummary(
+            room.lastParagraph,
+            roomId,
+            room.lastSpeaker,
+            room.paragraphTimestamp
+          );
+        }
 
         room.lastSpeaker = null;
         room.lastParagraph = "";
@@ -135,7 +147,7 @@ module.exports = function (io, socket) {
       // Broadcast the transcript to the room.
       io.sockets
         .to(roomId)
-        .emit("speechData", transcript, userId, room.paragraphTimestamp);
+        .emit("transcript", transcript, userId, room.paragraphTimestamp);
 
       isFinalEndTime = resultEndTime;
       lastTranscriptWasFinal = true;
@@ -216,6 +228,17 @@ module.exports = function (io, socket) {
 
     newStream = true;
     startStream(roomId, userId);
+  }
+
+  // Sends an HTTP request for a summary for a paragraph.
+  // Broadcasts the summarized text on response with confidence level.
+  function requestSummary(paragraph, roomId, userId, timestamp) {
+    // TODO: Fix this part to actually send a request and consume response.
+
+    let confidence = Math.random();
+    io.sockets
+      .to(roomId)
+      .emit("summary", paragraph, confidence, userId, timestamp);
   }
 
   /* ##### socket event listeners ##### */
