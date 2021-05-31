@@ -140,18 +140,17 @@ navigator.mediaDevices
 
       // Now you do not have to keep calls pending. You're ready.
       isReady = true;
+
+      // Attach event listeners on transcription and summary data arrival.
+      socket.on("speechData", (transcript, userId, paragraphTimestamp) => {
+        onTranscript(names, transcript, userId, paragraphTimestamp);
+      });
     }
 
     // Initiate Google Cloud STT transcription.
-    AudioStreamer.initRecording(
-      stream,
-      (transcript, userId, paragraphTimestamp) => {
-        console.log(`${names[userId]}(${paragraphTimestamp}): ${transcript}`);
-      },
-      (error) => {
-        console.error("Error when recording", error);
-      }
-    );
+    AudioStreamer.initRecording(stream, socket, (error) => {
+      console.error("Error when recording", error);
+    });
   });
 
 /* ####### Helper functions ####### */
@@ -238,6 +237,7 @@ function addVideoStream(container, stream, name, muted = false) {
   videoGrid.append(container);
 }
 
+/*
 // chat
 const form = document.getElementById("form");
 const chatInput = document.getElementById("input");
@@ -263,3 +263,4 @@ socket.on("message1", function (msg, name) {
   messages.appendChild(item);
   messages.scrollTop = messages.scrollHeight;
 });
+*/
