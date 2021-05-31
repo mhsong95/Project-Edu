@@ -174,10 +174,6 @@ span.timetag {
     color:darkgrey;
 }
 
-.paragraph {
-    font-size: medium;
-}
-
 .message {
     padding: 0.5rem 1rem;
     margin: 0.1rem;
@@ -187,12 +183,14 @@ span.timetag {
     background: rgba(40, 167, 70, 0.219);
 }
 
+#display-choice {
+    float:left;
+    width: 50%;
+}
+
 #invite {
-    /* float: left; */
-    position: absolute;
-    z-index: 1;
-    right: 0;
-    margin: 1rem;
+    float: right;
+    margin-right: 5%;
 }
 
 #screen-share {

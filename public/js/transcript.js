@@ -36,8 +36,66 @@ function onTranscript(names, transcript, userId, paragraphTimestamp) {
  * @param {String} userId User ID to which the summary belongs
  * @param {Number} paragraphTimestamp Timestamp at which the paragraph started
  */
-function onSummary(names, summary, userId, paragraphTimestamp) {
+function onSummary(names, summaryText, confidence, userId, paragraphTimestamp) {
+  let messageBox = getMessageBox(paragraphTimestamp);
+  if (!messageBox) {
+    messageBox = createMessageBox(names[userId], paragraphTimestamp);
+  }
 
+  let summaryBox = messageBox.childNodes[2];
+
+  let summary = summaryBox.childNodes[0];
+  summary.textContent = summaryText;
+
+  let confidenceElem = confidenceElement(confidence);
+  summary.append(confidenceElem);
+}
+
+// Hide or display transcripts or summaries according to radio button choice
+function displayChoice(choice) {
+  let paragraphs = document.getElementsByClassName("paragraph");
+  let summaryBoxes = document.getElementsByClassName("summary-box");
+
+  switch (choice.value) {
+    case "both":
+      // Show both: display paragraphs
+      for (let paragraph of paragraphs) {
+        paragraph.style.display = "";
+      }
+
+      // Reduce size of summary boxes and add left margin
+      for (let summaryBox of summaryBoxes) {
+        summaryBox.style.marginLeft = "1rem";
+        summaryBox.style.fontSize = "smaller";
+        summaryBox.style.display = "";
+      }
+
+      break;
+    case "transcript":
+      // Show transcripts only: display paragraphs
+      for (let paragraph of paragraphs) {
+        paragraph.style.display = "";
+      }
+
+      // Hide summary boxes.
+      for (let summaryBox of summaryBoxes) {
+        summaryBox.style.display = "none";
+      }
+      break;
+    case "summary":
+      // Show summaries only: hide paragraphs
+      for (let paragraph of paragraphs) {
+        paragraph.style.display = "none";
+      }
+
+      // Larger the summary boxes and remove left margin
+      for (let summaryBox of summaryBoxes) {
+        summaryBox.style.marginLeft = "";
+        summaryBox.style.fontSize = "medium";
+        summaryBox.style.display = "";
+      }
+      break;
+  }
 }
 
 // Helper functions
@@ -74,11 +132,18 @@ function createMessageBox(name, timestamp) {
   // messageBox.childNodes[1]: includes the (unsummarized) paragraph
   let paragraph = document.createElement("p");
   paragraph.className = "paragraph";
+  paragraph.style.fontSize = "medium";
   messageBox.append(paragraph);
 
-  // messageBox.childNodes[2]: includes the summary
+  // messageBox.childNodes[2]: includes the summary and confidence level
+  let summaryBox = document.createElement("div");
   let summary = document.createElement("p");
-  messageBox.append(summary);
+
+  summaryBox.className = "summary-box";
+  summaryBox.style.fontSize = "smaller";
+  summaryBox.style.marginLeft = "1rem";
+  summaryBox.append(summary);
+  messageBox.append(summaryBox);
 
   // Finally append the box to 'messages' area
   messages.appendChild(messageBox);
@@ -111,4 +176,29 @@ function formatTime(timestamp) {
 // Appends leading zero for one-digit hours, minutes, and seconds
 function appendZero(time) {
   return time < 10 ? "0" + time : time.toString();
+}
+
+// Returns an HTML element that represents confidence level
+function confidenceElement(confidence) {
+  let percentage = (confidence * 100).toFixed(1) + "%";
+  let emoji = "";
+  let color = "";
+
+  if (confidence < 0.33) {
+    emoji = " \u{1F641}";
+    color = "red";
+  } else if (confidence < 0.66) {
+    emoji = " \u{1F610}";
+    color = "blue";
+  } else {
+    emoji = " \u{1F600}";
+    color = "green";
+  }
+
+  let elem = document.createElement("span");
+  elem.style.color = color;
+  elem.style.fontSize = "smaller";
+  elem.textContent = emoji + " " + percentage;
+
+  return elem;
 }

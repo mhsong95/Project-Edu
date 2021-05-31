@@ -22,6 +22,13 @@
     <div id="video-grid"></div>
       <div id="right">
         <div id="messages"></div>
+        <div id="display-choice">
+          <input type="radio" name="transcript" value="both" onchange="displayChoice(this);" checked>Both
+          <input type="radio" name="transcript" value="transcript" onchange="displayChoice(this);">Transcripts
+          <input type="radio" name="transcript" value="summary" onchange="displayChoice(this);">Summary
+        </div>
+        <button id="invite" name="invite" class="btn btn-outline-success btn-sm"
+          onclick="alert(`${window.location.origin}/room/${ROOM_ID}`);">Invite</button>
       </div>
   </body>
 </html>
