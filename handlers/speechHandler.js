@@ -34,7 +34,7 @@ module.exports = function (io, socket) {
       ], // add your own speech context for better recognition
       */
     },
-    interimResults: false, // If you want interim results, set this to true
+    interimResults: true, // If you want interim results, set this to true
   };
 
   // Variables for maintaining infinite stream of recognition.
@@ -99,6 +99,28 @@ module.exports = function (io, socket) {
     let transcript = "";
     if (stream.results[0]?.alternatives[0]) {
       transcript = stream.results[0].alternatives[0].transcript.trim();
+
+      // When someone starts talking, the timer should be reset.
+      // If isFinal transcript does not arrive in 10 seconds since
+      // previous transcript (may not be isFinal), lastParagraph
+      // may not contain complete sentences.
+      if (room.speakTimeout) {
+        clearTimeout(room.speakTimeout);
+      }
+      room.speakTimeout = setTimeout(() => {
+        if (room.lastSpeaker) {
+          requestSummary(
+            room.lastParagraph,
+            roomId,
+            room.lastSpeaker,
+            room.paragraphTimestamp
+          );
+        }
+
+        room.lastSpeaker = null;
+        room.lastParagraph = "";
+        room.speakTimeout = null;
+      }, 10000);
     }
 
     if (stream.results[0]?.isFinal) {
@@ -124,25 +146,6 @@ module.exports = function (io, socket) {
         // Otherwise the transcript is accumulated to previous paragraph.
         room.lastParagraph += " " + transcript;
       }
-
-      // Paragraph also changes after 10 seconds since last speech.
-      if (room.speakTimeout) {
-        clearInterval(room.speakTimeout);
-      }
-      room.speakTimeout = setTimeout(() => {
-        if (room.lastSpeaker) {
-          requestSummary(
-            room.lastParagraph,
-            roomId,
-            room.lastSpeaker,
-            room.paragraphTimestamp
-          );
-        }
-
-        room.lastSpeaker = null;
-        room.lastParagraph = "";
-        room.speakTimeout = null;
-      }, 10000);
 
       // Broadcast the transcript to the room.
       io.sockets
