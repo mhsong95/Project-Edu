@@ -47,8 +47,15 @@ function onSummary(names, summaryText, confidence, userId, paragraphTimestamp) {
   let summary = summaryBox.childNodes[0];
   summary.textContent = summaryText;
 
-  let confidenceElem = confidenceElement(confidence);
-  summary.append(confidenceElem);
+  // If confidence === 0, the summary result is only the paragraph itself.
+  // Do not put confidence element as a sign of "this is not a summary"
+  if (confidence !== 0) {
+    let confidenceElem = confidenceElement(confidence);
+    summary.append(confidenceElem);
+  }
+
+  // Scroll down the messages area.
+  messages.scrollTop = messages.scrollHeight;
 }
 
 // Hide or display transcripts or summaries according to radio button choice
@@ -138,6 +145,7 @@ function createMessageBox(name, timestamp) {
   // messageBox.childNodes[2]: includes the summary and confidence level
   let summaryBox = document.createElement("div");
   let summary = document.createElement("p");
+  summary.textContent = "\u2026\u2026"; // Showing summary is in progress.
 
   summaryBox.className = "summary-box";
   summaryBox.style.fontSize = "smaller";

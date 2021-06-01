@@ -4,6 +4,8 @@ const rooms = require("../db.js");
 
 // Interface between audio input and recognizeStream.
 const { Writable } = require("stream");
+// For summary requests
+const req = require("request");
 
 // Import Google Cloud client library.
 const speech = require("@google-cloud/speech");
@@ -77,9 +79,15 @@ module.exports = function (io, socket) {
       });
 
     // Restart stream when streamingLimit expires
-    setTimeout(() => {
+    let restartTimeout = setTimeout(() => {
       restartStream(roomId, userId);
     }, streamingLimit);
+
+    // Stop the recognition stream and stop restarting it on disconnection.
+    socket.on("disconnect", () => {
+      stopStream();
+      clearTimeout(restartTimeout);
+    });
   }
 
   // Callback that is called whenever data arrives from recognizeStream.
@@ -236,12 +244,26 @@ module.exports = function (io, socket) {
   // Sends an HTTP request for a summary for a paragraph.
   // Broadcasts the summarized text on response with confidence level.
   function requestSummary(paragraph, roomId, userId, timestamp) {
-    // TODO: Fix this part to actually send a request and consume response.
+    req.post({
+      url: "http://143.248.133.30:5050",
+      body: `usrId=${userId}&content=${paragraph}`,
+    }, function (error, response, body) {
+      let summary = "";
+      if (!error && response.statusCode === 200) {
+        summary = body;
+      }
+      // TODO: get the actual confidence value
+      let confidence = Math.random();
 
-    let confidence = Math.random();
-    io.sockets
-      .to(roomId)
-      .emit("summary", paragraph, confidence, userId, timestamp);
+      // No summary: just emit the paragraph with a sign that
+      // it is not a summary (confidence = 0).
+      if (!summary) {
+        summary = paragraph;
+        confidence = 0;
+      }
+
+      io.sockets.to(roomId).emit("summary", summary, confidence, userId, timestamp);
+    });
   }
 
   /* ##### socket event listeners ##### */
