@@ -1,6 +1,0 @@
-npm install
-pip3 install -r summarizer/requirements.txt
-
-npm run summarizer
-npm run peer
-npm run devStart
