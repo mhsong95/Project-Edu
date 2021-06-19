@@ -2,7 +2,7 @@ const { body, validationResult } = require("express-validator");
 const { v4: uuidV4 } = require("uuid");
 
 // Require database and Room model.
-const rooms = require("../db");
+const { rooms } = require("../library/global");
 const { Room } = require("../models/room");
 
 // Helper functions.

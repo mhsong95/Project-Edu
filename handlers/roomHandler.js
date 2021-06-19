@@ -4,7 +4,7 @@
 const { Server, Socket } = require("socket.io");
 
 // Require database and models for Room and Participant.
-const rooms = require("../db");
+const { rooms } = require("../library/global");
 
 /**
  * Registers event handlers on room creation and deletion.

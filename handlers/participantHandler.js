@@ -4,7 +4,7 @@
 const { Server, Socket } = require("socket.io");
 
 // Require database and models for Room and Participant.
-const rooms = require("../db");
+const { rooms } = require("../library/global");
 const { User, Room } = require("../models/room");
 
 // Session handlers.

@@ -24,8 +24,8 @@ const io = new (require("socket.io").Server)(server, {  // Socket.io server
 const indexRouter = require("./routes/index");
 const roomRouter = require("./routes/room");
 
-// Initialize database
-const db = require("./db");
+// Initialize rooms
+const { rooms } = require("./library/global");
 
 // View engine setup.
 app.set("views", path.join(__dirname, "views"));
