@@ -49,7 +49,7 @@ function onSummary(names, summaryText, confidence, userId, paragraphTimestamp) {
 
   // If confidence === 0, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
-  if (confidence !== 0) {
+  if (confidence !== -1) {
     let confidenceElem = confidenceElement(confidence);
     summary.append(confidenceElem);
   }
@@ -145,7 +145,6 @@ function createMessageBox(name, timestamp) {
   // messageBox.childNodes[2]: includes the summary and confidence level
   let summaryBox = document.createElement("div");
   let summary = document.createElement("p");
-  summary.textContent = "\u2026\u2026"; // Showing summary is in progress.
 
   summaryBox.className = "summary-box";
   summaryBox.style.fontSize = "smaller";

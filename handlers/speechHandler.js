@@ -1,18 +1,15 @@
 const { Server, Socket } = require("socket.io");
 
-const rooms = require("../db.js");
+const { rooms } = require("../library/global.js");
+const { summaryHost, projectId, keyFilename } = require("../config");
 
 // Interface between audio input and recognizeStream.
 const { Writable } = require("stream");
 // For summary requests
 const req = require("request");
 
-// Import Google Cloud client library.
+// Import Google Cloud client library and create a client.
 const speech = require("@google-cloud/speech");
-
-// Create a client.
-const projectId = "ai-moderator-1621563494698";
-const keyFilename = "../ai-moderator-1fa097a2d18f.json";
 const speechClient = new speech.SpeechClient({ projectId, keyFilename });
 
 /**
@@ -245,7 +242,7 @@ module.exports = function (io, socket) {
   // Broadcasts the summarized text on response with confidence level.
   function requestSummary(paragraph, roomId, userId, timestamp) {
     req.post({
-      url: "http://143.248.133.30:5050",
+      url: summaryHost,
       body: `usrId=${userId}&content=${paragraph}`,
     }, function (error, response, body) {
       let summary = "";
@@ -259,7 +256,7 @@ module.exports = function (io, socket) {
       // it is not a summary (confidence = 0).
       if (!summary) {
         summary = paragraph;
-        confidence = 0;
+        confidence = -1;
       }
 
       io.sockets.to(roomId).emit("summary", summary, confidence, userId, timestamp);
